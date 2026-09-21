@@ -77,6 +77,78 @@ func TestEvaluateReportsWarnings(t *testing.T) {
 	}
 }
 
+func TestEvaluateRequiresConventionalCommits(t *testing.T) {
+	report := Evaluate(config.Config{
+		Rules: config.Rules{
+			RequireConventionalCommits: true,
+		},
+	}, git.Repository{
+		Commits: []git.Commit{
+			{Subject: "feat: add checkout validation"},
+			{Subject: "JIRA-123: add checkout validation"},
+		},
+	})
+
+	if !report.HasFailures() {
+		t.Fatal("expected non-conventional commit to fail")
+	}
+	if got, want := len(report.Messages), 1; got != want {
+		t.Fatalf("message count = %d, want %d", got, want)
+	}
+}
+
+func TestEvaluateWarnsWhenSquashRequiredAsWarning(t *testing.T) {
+	report := Evaluate(config.Config{
+		Rules: config.Rules{
+			RequireSquashedCommits: "warn",
+		},
+	}, git.Repository{
+		Commits: []git.Commit{
+			{Subject: "feat: add checkout validation"},
+			{Subject: "test: cover checkout validation"},
+		},
+	})
+
+	if report.HasFailures() {
+		t.Fatal("squash warning should not fail the report")
+	}
+	if got, want := len(report.Messages), 1; got != want {
+		t.Fatalf("message count = %d, want %d", got, want)
+	}
+	if report.Messages[0].Level != LevelWarn {
+		t.Fatalf("message level = %q, want warn", report.Messages[0].Level)
+	}
+}
+
+func TestEvaluateFailsWhenSquashRequiredAsFailure(t *testing.T) {
+	report := Evaluate(config.Config{
+		Rules: config.Rules{
+			RequireSquashedCommits: "fail",
+		},
+	}, git.Repository{
+		Commits: []git.Commit{
+			{Subject: "feat: add checkout validation"},
+			{Subject: "test: cover checkout validation"},
+		},
+	})
+
+	if !report.HasFailures() {
+		t.Fatal("expected multiple commits to fail")
+	}
+}
+
+func TestEvaluateRejectsInvalidSquashMode(t *testing.T) {
+	report := Evaluate(config.Config{
+		Rules: config.Rules{
+			RequireSquashedCommits: "deny",
+		},
+	}, git.Repository{})
+
+	if !report.HasFailures() {
+		t.Fatal("expected invalid squash mode to fail")
+	}
+}
+
 func TestMatchedPathSupportsDirectoryGlob(t *testing.T) {
 	if !matchedPath("docs/**", "docs/configuration.md") {
 		t.Fatal("expected docs/** to match nested docs file")

@@ -21,15 +21,15 @@ https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 
 YAML schema plugins generally consume JSON Schema, so this schema can validate `.danger.yaml` and `.danger.yml` files.
 
-Add `$schema` to a config file for editor support:
+Add a YAML language server annotation to a config file for editor support:
 
 ```yaml
-$schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+# yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 rules:
   max_changed_files: 50
 ```
 
-Or configure your editor/YAML language server to associate the schema with `.danger.yaml` and `.danger.yml`.
+This is a comment, so `danger-go` ignores it while editors can still provide validation and completion. You can also configure your editor/YAML language server to associate the schema with `.danger.yaml` and `.danger.yml`.
 
 This repository validates its sample config with:
 
@@ -52,11 +52,14 @@ danger-go validate --config .github/danger.yaml
 ## Full Example
 
 ```yaml
+# yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 rules:
   max_changed_files: 50
   max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
   require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_conventional_commits: true
+  require_squashed_commits: warn
   required_labels:
     - ready
   required_files:
@@ -147,6 +150,58 @@ In local mode, the searched values come from:
 - `DANGER_PR_BRANCH`
 
 In GitHub Actions, values come from the pull request event payload.
+
+### `require_conventional_commits`
+
+Type: boolean
+
+Fails when any pull request commit subject does not follow Conventional Commits.
+
+```yaml
+rules:
+  require_conventional_commits: true
+```
+
+Accepted examples:
+
+```text
+feat: add checkout validation
+fix(api): handle missing token
+docs!: rewrite configuration guide
+```
+
+In local mode, commit subjects come from `DANGER_PR_COMMITS` when set, otherwise `danger-go` reads commits from `origin/main..HEAD` when available:
+
+```sh
+DANGER_PR_COMMITS=$'feat: add checkout validation\ntest: cover checkout validation' danger-go local
+```
+
+In GitHub Actions, commit subjects come from the pull request commits API.
+
+### `require_squashed_commits`
+
+Type: string
+
+Allowed values:
+
+- `warn`
+- `fail`
+
+Warns or fails when a pull request has more than one commit.
+
+```yaml
+rules:
+  require_squashed_commits: warn
+```
+
+Use `fail` to deny multi-commit pull requests:
+
+```yaml
+rules:
+  require_squashed_commits: fail
+```
+
+In local mode, commit subjects come from the same sources as `require_conventional_commits`. In GitHub Actions, the count comes from the pull request commits API.
 
 ### `required_labels`
 

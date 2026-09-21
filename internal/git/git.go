@@ -16,11 +16,17 @@ type FileChange struct {
 	Deletions int
 }
 
+type Commit struct {
+	SHA     string
+	Subject string
+}
+
 type Repository struct {
 	Files             []string
 	ModifiedFiles     []string
 	UntrackedFiles    []string
 	FileChanges       []FileChange
+	Commits           []Commit
 	PullRequestTitle  string
 	PullRequestBody   string
 	PullRequestBranch string
@@ -48,11 +54,17 @@ func Inspect(ctx context.Context, dir string) (Repository, error) {
 		return Repository{}, err
 	}
 
+	commits := envCommits(os.Getenv("DANGER_PR_COMMITS"))
+	if len(commits) == 0 {
+		commits = inspectCommits(ctx, dir)
+	}
+
 	return Repository{
 		Files:             files,
 		ModifiedFiles:     modified,
 		UntrackedFiles:    untracked,
 		FileChanges:       fileChanges,
+		Commits:           commits,
 		PullRequestTitle:  os.Getenv("DANGER_PR_TITLE"),
 		PullRequestBody:   os.Getenv("DANGER_PR_BODY"),
 		PullRequestBranch: os.Getenv("DANGER_PR_BRANCH"),
@@ -148,6 +160,35 @@ func inspectFileChanges(ctx context.Context, dir string, modified, untracked []s
 	return changes, nil
 }
 
+func inspectCommits(ctx context.Context, dir string) []Commit {
+	lines, err := gitLines(ctx, dir, "log", "--format=%H%x00%s", "origin/main..HEAD")
+	if err != nil || len(lines) == 0 {
+		lines, err = gitLines(ctx, dir, "log", "-1", "--format=%H%x00%s")
+		if err != nil {
+			return nil
+		}
+	}
+
+	commits := make([]Commit, 0, len(lines))
+	for _, line := range lines {
+		parts := strings.SplitN(line, "\x00", 2)
+		if len(parts) != 2 || parts[1] == "" {
+			continue
+		}
+		commits = append(commits, Commit{SHA: parts[0], Subject: parts[1]})
+	}
+	return commits
+}
+
+func envCommits(value string) []Commit {
+	lines := splitEnvLines(value)
+	commits := make([]Commit, 0, len(lines))
+	for _, line := range lines {
+		commits = append(commits, Commit{Subject: line})
+	}
+	return commits
+}
+
 func parseNumstat(value string) int {
 	n, err := strconv.Atoi(value)
 	if err != nil {
@@ -161,6 +202,22 @@ func splitEnvList(value string) []string {
 		return nil
 	}
 	parts := strings.Split(value, ",")
+	var values []string
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			values = append(values, part)
+		}
+	}
+	return values
+}
+
+func splitEnvLines(value string) []string {
+	if value == "" {
+		return nil
+	}
+	normalized := strings.ReplaceAll(value, "\r\n", "\n")
+	parts := strings.Split(normalized, "\n")
 	var values []string
 	for _, part := range parts {
 		part = strings.TrimSpace(part)

@@ -33,6 +33,15 @@
           "type": "string",
           "description": "Go regular expression that must match the pull request title, body, or branch name."
         },
+        "require_conventional_commits": {
+          "type": "boolean",
+          "description": "Fail when any pull request commit subject is not a Conventional Commit."
+        },
+        "require_squashed_commits": {
+          "type": "string",
+          "enum": ["warn", "fail"],
+          "description": "Warn or fail when a pull request has more than one commit."
+        },
         "required_labels": {
           "$ref": "#/$defs/stringList",
           "description": "Pull request labels that must be present."

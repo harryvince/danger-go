@@ -129,12 +129,14 @@ https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 Supported settings live under `rules`:
 
 ```yaml
-$schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+# yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 rules:
   max_changed_files: 50
   max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
   require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_conventional_commits: true
+  require_squashed_commits: warn
   required_labels:
     - ready
   required_files:
