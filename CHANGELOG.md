@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0](https://github.com/harryvince/danger-go/compare/danger-go-v1.3.0...danger-go-v1.4.0) (2026-09-21)
+
+
+### Features
+
+* add initial support for external command plugins in config ([#25](https://github.com/harryvince/danger-go/issues/25)) ([595529b](https://github.com/harryvince/danger-go/commit/595529bf895a19abfeba74e9eb2352150d3a6330))
+* add pull request status labels ([#27](https://github.com/harryvince/danger-go/issues/27)) ([b1a935c](https://github.com/harryvince/danger-go/commit/b1a935ca47a44e4481dc93a9d344d6e2f5f7e6e3))
+
 ## [1.3.0](https://github.com/harryvince/danger-go/compare/danger-go-v1.2.0...danger-go-v1.3.0) (2026-09-21)
 
 
