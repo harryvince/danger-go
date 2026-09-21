@@ -45,7 +45,7 @@ When a pull request opens or updates, `danger-go` will:
 1. Read the repository config.
 2. Fetch pull request metadata from GitHub.
 3. Evaluate the configured rules.
-4. Post a pull request comment when permitted.
+4. Create or update a pull request comment when permitted.
 5. Fail the check if any rule fails.
 
 ## Local Runs

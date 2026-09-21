@@ -48,7 +48,7 @@ jobs:
 
 Then add `.danger.yaml` or `.danger.yml` to the repository.
 
-The action checks out the repository, installs Go, runs `danger-go ci`, reads pull request metadata, evaluates the configured rules, and posts a pull request comment when permissions allow it.
+The action checks out the repository, installs Go, runs `danger-go ci`, reads pull request metadata, evaluates the configured rules, and creates or updates a pull request comment when permissions allow it.
 
 ### Action Inputs
 
