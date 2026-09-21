@@ -1,0 +1,11 @@
+[tools]
+python = "3.14"
+uv = "latest"
+
+[tasks."docs:build"]
+description = "Build the Zensical documentation site"
+run = "uv run zensical build --clean"
+
+[tasks."docs:serve"]
+description = "Preview the Zensical documentation site locally"
+run = "uv run zensical serve"

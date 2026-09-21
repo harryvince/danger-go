@@ -13,7 +13,7 @@ The current product shape is:
 - A reusable composite GitHub Action in `action.yml`.
 - GitHub Actions support first.
 - Release automation through Release Please.
-- Documentation in `docs/`.
+- Documentation in `docs/`, built with Zensical and published to GitHub Pages.
 
 The public repo is:
 
@@ -39,6 +39,12 @@ Avoid ticket-prefix commit subjects like `JIRA-123: ...` unless they come after 
 
 ## Core Commands
 
+This repo uses mise for tool and task management. Install tools with:
+
+```sh
+mise install
+```
+
 Run tests:
 
 ```sh
@@ -58,6 +64,18 @@ DANGER_PR_TITLE="JIRA-123: local check" go run ./cmd/danger-go local --config .d
 ```
 
 The sample config requires a non-empty PR title, so set `DANGER_PR_TITLE` for local smoke tests.
+
+Build docs:
+
+```sh
+mise run docs:build
+```
+
+Preview docs locally:
+
+```sh
+mise run docs:serve
+```
 
 ## Current Configuration Schema
 
@@ -195,7 +213,7 @@ Do not manually edit generated release PR content unless necessary. Prefer makin
 
 ## Docs
 
-Docs live under `docs/` and are intended to be friendly to a future static docs site.
+Docs live under `docs/` and are built with Zensical.
 
 Current docs:
 
@@ -207,7 +225,15 @@ Current docs:
 
 Keep README concise and link deeper docs rather than duplicating everything.
 
-The user has said they may later ask to set up Zensical for publishing docs to GitHub Pages.
+Zensical/mise files:
+
+- `.mise.toml`
+- `pyproject.toml`
+- `uv.lock`
+- `zensical.toml`
+- `.github/workflows/docs.yml`
+
+The docs workflow publishes the generated `site` directory to GitHub Pages using GitHub Actions. If Pages deployment fails with a Pages setup error, confirm the repository Pages source is set to GitHub Actions.
 
 ## Implementation Notes
 

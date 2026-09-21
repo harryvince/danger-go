@@ -1,0 +1,15 @@
+[project]
+site_name = "danger-go"
+site_url = "https://harryvince.github.io/danger-go/"
+site_description = "A Go-native pull request policy runner inspired by Danger."
+site_author = "Harry Vince"
+copyright = "Copyright &copy; 2026 Harry Vince"
+docs_dir = "docs"
+site_dir = "site"
+
+[project.theme]
+name = "zensical"
+
+[project.theme.repository]
+name = "harryvince/danger-go"
+url = "https://github.com/harryvince/danger-go"
