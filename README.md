@@ -8,6 +8,13 @@ This repository dogfoods `danger-go` in GitHub Actions.
 
 PR comment posting is verified with a same-repository test pull request.
 
+## Documentation
+
+- [Quickstart](docs/quickstart.md)
+- [GitHub Action](docs/github-action.md)
+- [Configuration](docs/configuration.md)
+- [Roadmap](docs/roadmap.md)
+
 ## GitHub Action
 
 Create `.github/workflows/danger-go.yml`:
