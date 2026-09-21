@@ -10,10 +10,18 @@ PR comment posting is verified with a same-repository test pull request.
 
 ## Documentation
 
-- [Quickstart](docs/quickstart.md)
-- [GitHub Action](docs/github-action.md)
-- [Configuration](docs/configuration.md)
-- [Roadmap](docs/roadmap.md)
+Read the full documentation at:
+
+https://harryvince.github.io/danger-go/
+
+Key pages:
+
+- [Quickstart](https://harryvince.github.io/danger-go/quickstart/)
+- [GitHub Action](https://harryvince.github.io/danger-go/github-action/)
+- [Configuration](https://harryvince.github.io/danger-go/configuration/)
+- [Roadmap](https://harryvince.github.io/danger-go/roadmap/)
+
+Documentation source lives in [`docs/`](docs/).
 
 ## GitHub Action
 
