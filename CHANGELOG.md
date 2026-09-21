@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/harryvince/danger-go/compare/danger-go-v1.2.0...danger-go-v1.3.0) (2026-09-21)
+
+
+### Features
+
+* add configurable rule levels ([dc249b1](https://github.com/harryvince/danger-go/commit/dc249b14f0b971999e3a7e062fb7ad2863e511cc))
+
 ## [1.2.0](https://github.com/harryvince/danger-go/compare/danger-go-v1.1.0...danger-go-v1.2.0) (2026-09-21)
 
 
