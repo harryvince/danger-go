@@ -59,6 +59,13 @@ type fileResponse struct {
 	Deletions int    `json:"deletions"`
 }
 
+type commitResponse struct {
+	SHA    string `json:"sha"`
+	Commit struct {
+		Message string `json:"message"`
+	} `json:"commit"`
+}
+
 type commentResponse struct {
 	ID   int64  `json:"id"`
 	Body string `json:"body"`
@@ -121,9 +128,15 @@ func (c *Client) Repository(ctx context.Context, pr PullRequestContext) (git.Rep
 		return git.Repository{}, err
 	}
 
+	commits, err := c.commits(ctx, pr)
+	if err != nil {
+		return git.Repository{}, err
+	}
+
 	return git.Repository{
 		ModifiedFiles:     changePaths(files),
 		FileChanges:       fileChanges(files),
+		Commits:           gitCommits(commits),
 		PullRequestTitle:  pr.Title,
 		PullRequestBody:   pr.Body,
 		PullRequestBranch: pr.Branch,
@@ -239,6 +252,36 @@ func (c *Client) changedFiles(ctx context.Context, pr PullRequestContext) ([]fil
 	return files, nil
 }
 
+func (c *Client) commits(ctx context.Context, pr PullRequestContext) ([]commitResponse, error) {
+	var commits []commitResponse
+	for page := 1; ; page++ {
+		path := fmt.Sprintf("/repos/%s/%s/pulls/%d/commits?per_page=100&page=%d", pr.Owner, pr.Repo, pr.Number, page)
+		req, err := c.request(ctx, http.MethodGet, path, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		var pageCommits []commitResponse
+		if err := decodeResponse(resp, &pageCommits); err != nil {
+			return nil, err
+		}
+		if len(pageCommits) == 0 {
+			break
+		}
+
+		commits = append(commits, pageCommits...)
+		if len(pageCommits) < 100 {
+			break
+		}
+	}
+	return commits, nil
+}
+
 func changePaths(files []fileResponse) []string {
 	paths := make([]string, 0, len(files))
 	for _, file := range files {
@@ -257,6 +300,18 @@ func fileChanges(files []fileResponse) []git.FileChange {
 		})
 	}
 	return changes
+}
+
+func gitCommits(commits []commitResponse) []git.Commit {
+	result := make([]git.Commit, 0, len(commits))
+	for _, commit := range commits {
+		subject := strings.SplitN(commit.Commit.Message, "\n", 2)[0]
+		if subject == "" {
+			continue
+		}
+		result = append(result, git.Commit{SHA: commit.SHA, Subject: subject})
+	}
+	return result
 }
 
 func (c *Client) request(ctx context.Context, method, path string, body io.Reader) (*http.Request, error) {

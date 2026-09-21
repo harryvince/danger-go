@@ -58,6 +58,8 @@ rules:
   max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
   require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_conventional_commits: true
+  require_squashed_commits: warn
   required_labels:
     - ready
   required_files:
@@ -148,6 +150,58 @@ In local mode, the searched values come from:
 - `DANGER_PR_BRANCH`
 
 In GitHub Actions, values come from the pull request event payload.
+
+### `require_conventional_commits`
+
+Type: boolean
+
+Fails when any pull request commit subject does not follow Conventional Commits.
+
+```yaml
+rules:
+  require_conventional_commits: true
+```
+
+Accepted examples:
+
+```text
+feat: add checkout validation
+fix(api): handle missing token
+docs!: rewrite configuration guide
+```
+
+In local mode, commit subjects come from `DANGER_PR_COMMITS` when set, otherwise `danger-go` reads commits from `origin/main..HEAD` when available:
+
+```sh
+DANGER_PR_COMMITS=$'feat: add checkout validation\ntest: cover checkout validation' danger-go local
+```
+
+In GitHub Actions, commit subjects come from the pull request commits API.
+
+### `require_squashed_commits`
+
+Type: string
+
+Allowed values:
+
+- `warn`
+- `fail`
+
+Warns or fails when a pull request has more than one commit.
+
+```yaml
+rules:
+  require_squashed_commits: warn
+```
+
+Use `fail` to deny multi-commit pull requests:
+
+```yaml
+rules:
+  require_squashed_commits: fail
+```
+
+In local mode, commit subjects come from the same sources as `require_conventional_commits`. In GitHub Actions, the count comes from the pull request commits API.
 
 ### `required_labels`
 

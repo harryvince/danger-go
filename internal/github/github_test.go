@@ -84,6 +84,55 @@ func TestContextFromActionsReadsPullRequestMetadata(t *testing.T) {
 	}
 }
 
+func TestRepositoryReadsChangedFilesAndCommits(t *testing.T) {
+	var methods []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		methods = append(methods, r.Method+" "+r.URL.String())
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/repos/o/r/pulls/7/files":
+			writeJSON(t, w, []fileResponse{{
+				Filename:  "README.md",
+				Additions: 5,
+				Deletions: 1,
+			}})
+		case r.Method == http.MethodGet && r.URL.Path == "/repos/o/r/pulls/7/commits":
+			writeJSON(t, w, []commitResponse{{
+				SHA: "abc123",
+				Commit: struct {
+					Message string `json:"message"`
+				}{Message: "feat: add commit policy\n\nBody"},
+			}})
+		default:
+			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.String())
+		}
+	}))
+	defer server.Close()
+
+	client := testClient(server.URL)
+	repo, err := client.Repository(context.Background(), PullRequestContext{Owner: "o", Repo: "r", Number: 7})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got, want := strings.Join(repo.ChangedFiles(), ","), "README.md"; got != want {
+		t.Fatalf("changed files = %q, want %q", got, want)
+	}
+	if got, want := repo.ChangedLines(), 6; got != want {
+		t.Fatalf("changed lines = %d, want %d", got, want)
+	}
+	if got, want := len(repo.Commits), 1; got != want {
+		t.Fatalf("commit count = %d, want %d", got, want)
+	}
+	if repo.Commits[0].Subject != "feat: add commit policy" {
+		t.Fatalf("commit subject = %q", repo.Commits[0].Subject)
+	}
+
+	want := "GET /repos/o/r/pulls/7/files?per_page=100&page=1,GET /repos/o/r/pulls/7/commits?per_page=100&page=1"
+	if got := strings.Join(methods, ","); got != want {
+		t.Fatalf("methods = %s, want %s", got, want)
+	}
+}
+
 func TestPostReportCommentUpdatesExistingComment(t *testing.T) {
 	var methods []string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

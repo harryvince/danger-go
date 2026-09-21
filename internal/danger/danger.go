@@ -26,6 +26,8 @@ var dependencyManifestPatterns = []string{
 	"requirements.txt",
 }
 
+var conventionalCommitPattern = regexp.MustCompile(`^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: .+`)
+
 type Level string
 
 const (
@@ -81,6 +83,28 @@ func Evaluate(cfg config.Config, repo git.Repository) Report {
 		} else if !matched {
 			report.fail(fmt.Sprintf("PR title, body, or branch does not match linked issue pattern %q", cfg.Rules.RequireLinkedIssuePattern))
 		}
+	}
+
+	if cfg.Rules.RequireConventionalCommits {
+		for _, commit := range repo.Commits {
+			if !conventionalCommitPattern.MatchString(commit.Subject) {
+				report.fail(fmt.Sprintf("commit subject %q is not conventional", commit.Subject))
+			}
+		}
+	}
+
+	switch cfg.Rules.RequireSquashedCommits {
+	case "fail":
+		if len(repo.Commits) > 1 {
+			report.fail(fmt.Sprintf("PR has %d commits; squash to a single commit before merging", len(repo.Commits)))
+		}
+	case "warn":
+		if len(repo.Commits) > 1 {
+			report.warn(fmt.Sprintf("PR has %d commits; consider squashing before merging", len(repo.Commits)))
+		}
+	case "":
+	default:
+		report.fail(fmt.Sprintf("invalid require_squashed_commits value %q; use \"warn\" or \"fail\"", cfg.Rules.RequireSquashedCommits))
 	}
 
 	for _, label := range cfg.Rules.RequiredLabels {

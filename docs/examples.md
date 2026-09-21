@@ -68,6 +68,46 @@ Closes JIRA-123
 feature/JIRA-123-workflow
 ```
 
+## Conventional Commits
+
+Require every pull request commit subject to follow Conventional Commits:
+
+```yaml
+rules:
+  require_conventional_commits: true
+```
+
+Matching examples:
+
+```text
+feat: add checkout validation
+fix(api): handle missing token
+docs!: rewrite configuration guide
+```
+
+Non-matching examples:
+
+```text
+JIRA-123: add checkout validation
+Update workflow
+```
+
+## Squashed Commits
+
+Warn when a pull request has more than one commit:
+
+```yaml
+rules:
+  require_squashed_commits: warn
+```
+
+Fail instead of warning:
+
+```yaml
+rules:
+  require_squashed_commits: fail
+```
+
 ## Required Labels
 
 Require pull request labels:
@@ -148,6 +188,8 @@ rules:
   max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
   require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_conventional_commits: true
+  require_squashed_commits: warn
   required_labels:
     - ready
   required_files:

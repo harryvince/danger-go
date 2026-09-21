@@ -59,6 +59,23 @@ func TestLoadExplicitPath(t *testing.T) {
 	}
 }
 
+func TestLoadCommitPolicyRules(t *testing.T) {
+	t.Chdir(t.TempDir())
+	writeFile(t, ".danger.yaml", "rules:\n  require_conventional_commits: true\n  require_squashed_commits: warn\n")
+
+	cfg, _, err := Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !cfg.Rules.RequireConventionalCommits {
+		t.Fatal("require_conventional_commits = false, want true")
+	}
+	if cfg.Rules.RequireSquashedCommits != "warn" {
+		t.Fatalf("require_squashed_commits = %q, want warn", cfg.Rules.RequireSquashedCommits)
+	}
+}
+
 func writeFile(t *testing.T, path, contents string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
