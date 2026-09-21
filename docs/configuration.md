@@ -21,15 +21,15 @@ https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 
 YAML schema plugins generally consume JSON Schema, so this schema can validate `.danger.yaml` and `.danger.yml` files.
 
-Add `$schema` to a config file for editor support:
+Add a YAML language server annotation to a config file for editor support:
 
 ```yaml
-$schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+# yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 rules:
   max_changed_files: 50
 ```
 
-Or configure your editor/YAML language server to associate the schema with `.danger.yaml` and `.danger.yml`.
+This is a comment, so `danger-go` ignores it while editors can still provide validation and completion. You can also configure your editor/YAML language server to associate the schema with `.danger.yaml` and `.danger.yml`.
 
 This repository validates its sample config with:
 
@@ -52,6 +52,7 @@ danger-go validate --config .github/danger.yaml
 ## Full Example
 
 ```yaml
+# yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 rules:
   max_changed_files: 50
   max_changed_lines: 500

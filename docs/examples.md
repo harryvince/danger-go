@@ -2,10 +2,10 @@
 
 These examples show common ways to configure `danger-go`.
 
-For editor validation, add the published JSON Schema URI to your config:
+For editor validation, add the published JSON Schema URI with a YAML language server annotation:
 
 ```yaml
-$schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+# yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 ```
 
 ## Small Pull Requests

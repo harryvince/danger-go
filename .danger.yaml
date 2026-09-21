@@ -1,4 +1,4 @@
-$schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+# yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 rules:
   max_changed_files: 50
   require_pr_title_pattern: ".+"
