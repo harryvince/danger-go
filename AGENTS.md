@@ -35,7 +35,7 @@ ci: update dogfood workflow
 test: verify github action comment posting
 ```
 
-Avoid ticket-prefix commit subjects like `JIRA-123: ...` unless they come after the conventional prefix in the body or scope. PR titles may still need to satisfy `.danger.yaml`.
+Avoid ticket-prefix commit subjects like `ABC-123: ...` unless they come after the conventional prefix in the body or scope. PR titles should use Conventional Commits so GitHub squash merges produce Release Please-friendly commit messages. They only need to be non-empty unless `.danger.yaml` is changed.
 
 ## Change Workflow
 
@@ -50,7 +50,7 @@ git switch -c <type>/<short-description>
 # make changes
 go test ./...
 git push -u origin <type>/<short-description>
-gh pr create --title "JIRA-123: short description" --body "..."
+gh pr create --title "feat: short description" --body "..."
 ```
 
 After opening the PR, watch the dogfood workflow and confirm the `danger-go` comment when the change could affect CI, the action, provider behavior, docs publishing, or config evaluation.
@@ -72,13 +72,13 @@ go test ./...
 Run local checks:
 
 ```sh
-DANGER_PR_TITLE="JIRA-123: local check" go run ./cmd/danger-go local
+DANGER_PR_TITLE="Local check" go run ./cmd/danger-go local
 ```
 
 Run local checks with explicit config:
 
 ```sh
-DANGER_PR_TITLE="JIRA-123: local check" go run ./cmd/danger-go local --config .danger.yaml
+DANGER_PR_TITLE="Local check" go run ./cmd/danger-go local --config .danger.yaml
 ```
 
 The sample config requires a non-empty PR title, so set `DANGER_PR_TITLE` for local smoke tests.
@@ -134,8 +134,8 @@ level: fail
 rules:
   max_changed_files: 50
   max_changed_lines: 500
-  require_pr_title_pattern: "^JIRA-[0-9]+: .+"
-  require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_pr_title_pattern: ".+"
+  require_linked_issue_pattern: "ABC-[0-9]+"
   require_conventional_commits: true
   require_squashed_commits:
     enabled: true
@@ -210,7 +210,7 @@ When changing `action.yml` or workflow behavior, prefer testing through a real P
 
 1. Create a branch.
 2. Make the change.
-3. Push and open a PR with a title that passes `.danger.yaml`, for example `JIRA-127: verify default token`.
+3. Push and open a PR with a conventional title, for example `fix: verify default token`.
 4. Watch the run:
 
 ```sh

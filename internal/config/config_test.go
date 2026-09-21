@@ -87,7 +87,7 @@ rules:
     value: 12
     level: fail
   require_pr_title_pattern:
-    value: "^JIRA-[0-9]+: .+"
+    value: "^ISSUE-[0-9]+: .+"
     level: warn
   required_labels:
     values:
@@ -109,7 +109,7 @@ rules:
 	if cfg.Rules.MaxChangedFiles.Value != 12 || cfg.Rules.MaxChangedFiles.Level != "fail" {
 		t.Fatalf("max_changed_files = %#v", cfg.Rules.MaxChangedFiles)
 	}
-	if cfg.Rules.RequirePRTitlePattern.Value != "^JIRA-[0-9]+: .+" || cfg.Rules.RequirePRTitlePattern.Level != "warn" {
+	if cfg.Rules.RequirePRTitlePattern.Value != "^ISSUE-[0-9]+: .+" || cfg.Rules.RequirePRTitlePattern.Level != "warn" {
 		t.Fatalf("require_pr_title_pattern = %#v", cfg.Rules.RequirePRTitlePattern)
 	}
 	if got := cfg.Rules.RequiredLabels.Values; len(got) != 1 || got[0] != "ready" || cfg.Rules.RequiredLabels.Level != "fail" {
@@ -117,6 +117,45 @@ rules:
 	}
 	if !cfg.Rules.WarnDependencyChanges.Enabled || cfg.Rules.WarnDependencyChanges.Level != "fail" {
 		t.Fatalf("warn_dependency_changes = %#v", cfg.Rules.WarnDependencyChanges)
+	}
+}
+
+func TestLabelsDefaultEnabled(t *testing.T) {
+	t.Chdir(t.TempDir())
+	writeFile(t, ".danger.yaml", "rules:\n  max_changed_files: 3\n")
+
+	cfg, _, err := Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cfg.Labels.IsEnabled() {
+		t.Fatal("labels disabled, want enabled by default")
+	}
+}
+
+func TestLabelsCanBeDisabled(t *testing.T) {
+	t.Chdir(t.TempDir())
+	writeFile(t, ".danger.yaml", "labels: false\nrules:\n  max_changed_files: 3\n")
+
+	cfg, _, err := Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Labels.IsEnabled() {
+		t.Fatal("labels enabled, want disabled")
+	}
+}
+
+func TestLabelsObjectCanBeDisabled(t *testing.T) {
+	t.Chdir(t.TempDir())
+	writeFile(t, ".danger.yaml", "labels:\n  enabled: false\nrules:\n  max_changed_files: 3\n")
+
+	cfg, _, err := Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Labels.IsEnabled() {
+		t.Fatal("labels enabled, want disabled")
 	}
 }
 

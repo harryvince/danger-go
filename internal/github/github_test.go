@@ -53,9 +53,9 @@ func TestContextFromActionsReadsPullRequestMetadata(t *testing.T) {
 	event := `{
 	  "pull_request": {
 	    "number": 42,
-	    "title": "JIRA-123: add rule",
-	    "body": "Closes JIRA-123",
-	    "head": {"ref": "feature/JIRA-123-rule"},
+	    "title": "ISSUE-123: add rule",
+	    "body": "Closes ISSUE-123",
+	    "head": {"ref": "feature/ISSUE-123-rule"},
 	    "labels": [{"name": "ready"}, {"name": "rules"}]
 	  },
 	  "repository": {
@@ -73,10 +73,10 @@ func TestContextFromActionsReadsPullRequestMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if ctx.Body != "Closes JIRA-123" {
+	if ctx.Body != "Closes ISSUE-123" {
 		t.Fatalf("body = %q", ctx.Body)
 	}
-	if ctx.Branch != "feature/JIRA-123-rule" {
+	if ctx.Branch != "feature/ISSUE-123-rule" {
 		t.Fatalf("branch = %q", ctx.Branch)
 	}
 	if got, want := strings.Join(ctx.Labels, ","), "ready,rules"; got != want {
@@ -130,6 +130,69 @@ func TestRepositoryReadsChangedFilesAndCommits(t *testing.T) {
 	want := "GET /repos/o/r/pulls/7/files?per_page=100&page=1,GET /repos/o/r/pulls/7/commits?per_page=100&page=1"
 	if got := strings.Join(methods, ","); got != want {
 		t.Fatalf("methods = %s, want %s", got, want)
+	}
+}
+
+func TestSyncReportLabelAddsPassedAndRemovesStaleLabels(t *testing.T) {
+	var methods []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		methods = append(methods, r.Method+" "+r.URL.Path)
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/repos/o/r/labels":
+			var payload map[string]string
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+				t.Fatal(err)
+			}
+			if payload["name"] != LabelPassed {
+				t.Fatalf("label name = %q, want %q", payload["name"], LabelPassed)
+			}
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			writeJSON(t, w, map[string]string{"message": "already exists"})
+		case r.Method == http.MethodDelete && r.URL.Path == "/repos/o/r/issues/7/labels/danger::warn":
+			w.WriteHeader(http.StatusNotFound)
+			writeJSON(t, w, map[string]string{"message": "not found"})
+		case r.Method == http.MethodDelete && r.URL.Path == "/repos/o/r/issues/7/labels/danger::fail":
+			w.WriteHeader(http.StatusOK)
+			writeJSON(t, w, []map[string]string{})
+		case r.Method == http.MethodPost && r.URL.Path == "/repos/o/r/issues/7/labels":
+			var payload map[string][]string
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+				t.Fatal(err)
+			}
+			if got := payload["labels"]; len(got) != 1 || got[0] != LabelPassed {
+				t.Fatalf("labels payload = %#v", payload)
+			}
+			w.WriteHeader(http.StatusOK)
+			writeJSON(t, w, []map[string]string{{"name": LabelPassed}})
+		default:
+			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.String())
+		}
+	}))
+	defer server.Close()
+
+	client := testClient(server.URL)
+	if err := client.SyncReportLabel(context.Background(), PullRequestContext{Owner: "o", Repo: "r", Number: 7}, danger.Report{}); err != nil {
+		t.Fatal(err)
+	}
+
+	want := "POST /repos/o/r/labels,DELETE /repos/o/r/issues/7/labels/danger::warn,DELETE /repos/o/r/issues/7/labels/danger::fail,POST /repos/o/r/issues/7/labels"
+	if got := strings.Join(methods, ","); got != want {
+		t.Fatalf("methods = %s, want %s", got, want)
+	}
+}
+
+func TestReportLabelPrefersFailThenWarn(t *testing.T) {
+	report := danger.Report{Messages: []danger.Message{
+		{Level: danger.LevelWarn, Text: "warning"},
+		{Level: danger.LevelFail, Text: "failure"},
+	}}
+	if got := reportLabel(report); got != LabelFail {
+		t.Fatalf("label = %q, want %q", got, LabelFail)
+	}
+
+	report = danger.Report{Messages: []danger.Message{{Level: danger.LevelWarn, Text: "warning"}}}
+	if got := reportLabel(report); got != LabelWarn {
+		t.Fatalf("label = %q, want %q", got, LabelWarn)
 	}
 }
 

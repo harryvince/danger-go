@@ -55,11 +55,13 @@ danger-go validate --config .github/danger.yaml
 ```yaml
 # yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 level: fail
+labels:
+  enabled: true
 rules:
   max_changed_files: 50
   max_changed_lines: 500
-  require_pr_title_pattern: "^JIRA-[0-9]+: .+"
-  require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_pr_title_pattern: "^ISSUE-[0-9]+: .+"
+  require_linked_issue_pattern: "ISSUE-[0-9]+"
   require_conventional_commits: true
   require_squashed_commits:
     enabled: true
@@ -93,8 +95,28 @@ plugins:
 | Setting | Type | Required | Description |
 | --- | --- | --- | --- |
 | `level` | `warn` or `fail` | no | Default level for configured rules. Defaults to each rule's historical behavior when omitted. |
+| `labels` | boolean or object | no | Controls automatic status labels. Enabled by default. |
 | `rules` | object | no | Rule configuration. If omitted, no built-in rules are evaluated. |
 | `plugins` | array | no | External command plugins to run after built-in rules. |
+
+## Status Labels
+
+In GitHub Actions, `danger-go` creates or updates one status label on the pull request by default:
+
+- `danger::passed` when no issues are found.
+- `danger::warn` when there are warnings but no failures.
+- `danger::fail` when there is at least one failure.
+
+It also removes the other `danger::` status labels so the pull request keeps a single current result. Disable this behavior with either form:
+
+```yaml
+labels: false
+```
+
+```yaml
+labels:
+  enabled: false
+```
 
 ## Rule Levels
 
@@ -167,7 +189,7 @@ Fails when the pull request title does not match the configured regular expressi
 
 ```yaml
 rules:
-  require_pr_title_pattern: "^JIRA-[0-9]+: .+"
+  require_pr_title_pattern: "^ISSUE-[0-9]+: .+"
 ```
 
 With an explicit level:
@@ -175,7 +197,7 @@ With an explicit level:
 ```yaml
 rules:
   require_pr_title_pattern:
-    value: "^JIRA-[0-9]+: .+"
+    value: "^ISSUE-[0-9]+: .+"
     level: warn
 ```
 
@@ -184,7 +206,7 @@ This uses Go regular expression syntax.
 In local mode, the title comes from `DANGER_PR_TITLE`:
 
 ```sh
-DANGER_PR_TITLE="JIRA-123: add checkout validation" danger-go local
+DANGER_PR_TITLE="ISSUE-123: add checkout validation" danger-go local
 ```
 
 In GitHub Actions, the title comes from the pull request event payload.
@@ -197,10 +219,10 @@ Fails when the configured regular expression does not match the pull request tit
 
 ```yaml
 rules:
-  require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_linked_issue_pattern: "ISSUE-[0-9]+"
 ```
 
-This is useful for requiring issue keys such as `JIRA-123` somewhere in the pull request metadata.
+This is useful for requiring issue keys such as `ISSUE-123` somewhere in the pull request metadata.
 
 In local mode, the searched values come from:
 

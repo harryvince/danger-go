@@ -51,21 +51,21 @@ Require a ticket key at the start of every pull request title:
 
 ```yaml
 rules:
-  require_pr_title_pattern: "^JIRA-[0-9]+: .+"
+  require_pr_title_pattern: "^ISSUE-[0-9]+: .+"
 ```
 
 Matching titles:
 
 ```text
-JIRA-123: add checkout validation
-JIRA-9876: update release workflow
+ISSUE-123: add checkout validation
+ISSUE-9876: update release workflow
 ```
 
 Non-matching titles:
 
 ```text
 Add checkout validation
-JIRA-123 add checkout validation
+ISSUE-123 add checkout validation
 ```
 
 ## Linked Issue Keys
@@ -74,15 +74,15 @@ Require an issue key somewhere in the pull request title, body, or branch name:
 
 ```yaml
 rules:
-  require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_linked_issue_pattern: "ISSUE-[0-9]+"
 ```
 
 Matching examples:
 
 ```text
-JIRA-123: update workflow
-Closes JIRA-123
-feature/JIRA-123-workflow
+ISSUE-123: update workflow
+Closes ISSUE-123
+feature/ISSUE-123-workflow
 ```
 
 ## Conventional Commits
@@ -105,7 +105,7 @@ docs!: rewrite configuration guide
 Non-matching examples:
 
 ```text
-JIRA-123: add checkout validation
+ISSUE-123: add checkout validation
 Update workflow
 ```
 
@@ -204,8 +204,8 @@ level: fail
 rules:
   max_changed_files: 50
   max_changed_lines: 500
-  require_pr_title_pattern: "^JIRA-[0-9]+: .+"
-  require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_pr_title_pattern: "^ISSUE-[0-9]+: .+"
+  require_linked_issue_pattern: "ISSUE-[0-9]+"
   require_conventional_commits: true
   require_squashed_commits:
     enabled: true
@@ -259,11 +259,11 @@ jobs:
 Run the same config locally:
 
 ```sh
-DANGER_PR_TITLE="JIRA-123: local validation" go run github.com/harryvince/danger-go/cmd/danger-go@latest local
+DANGER_PR_TITLE="ISSUE-123: local validation" go run github.com/harryvince/danger-go/cmd/danger-go@latest local
 ```
 
 Use an explicit config path locally:
 
 ```sh
-DANGER_PR_TITLE="JIRA-123: local validation" go run github.com/harryvince/danger-go/cmd/danger-go@latest local --config .github/danger.yaml
+DANGER_PR_TITLE="ISSUE-123: local validation" go run github.com/harryvince/danger-go/cmd/danger-go@latest local --config .github/danger.yaml
 ```
