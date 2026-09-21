@@ -86,7 +86,7 @@ func runChecks(ctx context.Context, mode string, args []string, stdout io.Writer
 
 	if mode == "ci" && gh != nil && pr != nil {
 		if err := gh.PostReportComment(ctx, *pr, report); err != nil {
-			return err
+			fmt.Fprintf(stdout, "Skipping GitHub comment: %s\n", err)
 		}
 	}
 
