@@ -37,6 +37,24 @@ test: verify github action comment posting
 
 Avoid ticket-prefix commit subjects like `JIRA-123: ...` unless they come after the conventional prefix in the body or scope. PR titles may still need to satisfy `.danger.yaml`.
 
+## Change Workflow
+
+For new work, create a branch, push it, and raise a GitHub pull request instead of committing directly to `main`. This keeps the dogfood workflow meaningful and verifies the reusable action against real PR events.
+
+Use direct pushes to `main` only for explicitly requested emergency fixes or repository maintenance where the user has clearly asked for it.
+
+Suggested flow:
+
+```sh
+git switch -c <type>/<short-description>
+# make changes
+go test ./...
+git push -u origin <type>/<short-description>
+gh pr create --title "JIRA-123: short description" --body "..."
+```
+
+After opening the PR, watch the dogfood workflow and confirm the `danger-go` comment when the change could affect CI, the action, provider behavior, docs publishing, or config evaluation.
+
 ## Core Commands
 
 This repo uses mise for tool and task management. Install tools with:
@@ -174,6 +192,22 @@ Expected comment body:
 
 No issues found.
 ```
+
+## Pipeline and Integration Tests
+
+The repo's own `.danger.yaml` is intentionally small, so dogfooding alone will not cover every feature a downstream repository may rely on.
+
+As functionality grows, add pipeline-oriented tests for consumer-facing behavior even when this repo does not need that behavior itself. Good candidates include:
+
+- action inputs such as custom `config` and `go-version`;
+- failing-rule behavior and non-zero exit codes;
+- comment posting and comment update behavior;
+- missing or restricted GitHub token permissions;
+- alternate config filenames;
+- GitHub event payload edge cases;
+- rules intended for repositories with different layouts.
+
+Prefer fast Go unit tests for pure behavior and real GitHub Actions PR checks for workflow/action behavior. If a feature is mainly useful to consumers, add a targeted workflow or fixture so it is still exercised somewhere in CI.
 
 ## Known GitHub Actions Gotchas
 
