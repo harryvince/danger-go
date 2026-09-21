@@ -7,7 +7,6 @@
 - Improve GitHub comment behavior so repeated runs update an existing comment instead of adding a new one.
 - Add more built-in rules.
 - Add a release artifact for users who prefer a binary instead of `go run`.
-- Add a version command.
 
 ## Possible Rule Ideas
 
