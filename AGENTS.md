@@ -280,6 +280,61 @@ Upstream projects:
 
 Do not manually edit generated release PR content unless necessary. Prefer making normal conventional commits to `main` and let Release Please update the PR.
 
+When the user asks to perform a release:
+
+1. Inspect the Release Please PR, usually titled like `chore(main): release danger-go X.Y.Z`.
+
+```sh
+gh pr view <number> --json number,state,mergeStateStatus,isDraft,title,url,statusCheckRollup,headRefName
+gh pr diff <number> --name-only
+gh pr diff <number> --patch
+```
+
+2. Confirm the diff is limited to generated release files, normally:
+
+- `.release-please-manifest.json`
+- `CHANGELOG.md`
+
+3. Merge the Release Please PR with the generated conventional subject.
+
+```sh
+gh pr merge <number> --squash --delete-branch \
+  --subject "chore(main): release danger-go X.Y.Z" \
+  --body "Release danger-go X.Y.Z."
+git pull --ff-only
+```
+
+4. Confirm Release Please created and published the release.
+
+```sh
+gh release list --limit 5
+gh release view danger-go-vX.Y.Z --json tagName,name,isDraft,isPrerelease,publishedAt,assets,url
+```
+
+5. Check whether `.github/workflows/release-artifacts.yml` ran.
+
+```sh
+gh run list --workflow release-artifacts.yml --limit 5
+```
+
+Known limitation: releases created by `github-actions[bot]`/Release Please may not trigger the `release` event workflow that uploads binary artifacts. If the release exists but has no assets and no new `release-artifacts` run started, manually dispatch the workflow with the release tag:
+
+```sh
+gh workflow run release-artifacts.yml -f tag=danger-go-vX.Y.Z
+gh run watch <run-id> --interval 10 --exit-status
+gh release view danger-go-vX.Y.Z --json tagName,name,url,assets,publishedAt
+```
+
+Expected assets after a successful artifact run:
+
+- `checksums.txt`
+- `danger-go_X.Y.Z_linux_amd64.tar.gz`
+- `danger-go_X.Y.Z_linux_arm64.tar.gz`
+- `danger-go_X.Y.Z_darwin_amd64.tar.gz`
+- `danger-go_X.Y.Z_darwin_arm64.tar.gz`
+- `danger-go_X.Y.Z_windows_amd64.tar.gz`
+- `danger-go_X.Y.Z_windows_arm64.tar.gz`
+
 ## Docs
 
 Docs live under `docs/` and are built with Zensical.
