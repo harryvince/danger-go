@@ -44,7 +44,9 @@ type actionsEvent struct {
 }
 
 type fileResponse struct {
-	Filename string `json:"filename"`
+	Filename  string `json:"filename"`
+	Additions int    `json:"additions"`
+	Deletions int    `json:"deletions"`
 }
 
 type commentResponse struct {
@@ -107,7 +109,8 @@ func (c *Client) Repository(ctx context.Context, pr PullRequestContext) (git.Rep
 	}
 
 	return git.Repository{
-		ModifiedFiles:    files,
+		ModifiedFiles:    changePaths(files),
+		FileChanges:      fileChanges(files),
 		PullRequestTitle: pr.Title,
 	}, nil
 }
@@ -180,8 +183,8 @@ func (c *Client) findReportComment(ctx context.Context, pr PullRequestContext) (
 	}
 }
 
-func (c *Client) changedFiles(ctx context.Context, pr PullRequestContext) ([]string, error) {
-	var files []string
+func (c *Client) changedFiles(ctx context.Context, pr PullRequestContext) ([]fileResponse, error) {
+	var files []fileResponse
 	for page := 1; ; page++ {
 		path := fmt.Sprintf("/repos/%s/%s/pulls/%d/files?per_page=100&page=%d", pr.Owner, pr.Repo, pr.Number, page)
 		req, err := c.request(ctx, http.MethodGet, path, nil)
@@ -202,14 +205,32 @@ func (c *Client) changedFiles(ctx context.Context, pr PullRequestContext) ([]str
 			break
 		}
 
-		for _, file := range pageFiles {
-			files = append(files, file.Filename)
-		}
+		files = append(files, pageFiles...)
 		if len(pageFiles) < 100 {
 			break
 		}
 	}
 	return files, nil
+}
+
+func changePaths(files []fileResponse) []string {
+	paths := make([]string, 0, len(files))
+	for _, file := range files {
+		paths = append(paths, file.Filename)
+	}
+	return paths
+}
+
+func fileChanges(files []fileResponse) []git.FileChange {
+	changes := make([]git.FileChange, 0, len(files))
+	for _, file := range files {
+		changes = append(changes, git.FileChange{
+			Path:      file.Filename,
+			Additions: file.Additions,
+			Deletions: file.Deletions,
+		})
+	}
+	return changes
 }
 
 func (c *Client) request(ctx context.Context, method, path string, body io.Reader) (*http.Request, error) {

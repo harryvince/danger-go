@@ -6,13 +6,21 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
+
+type FileChange struct {
+	Path      string
+	Additions int
+	Deletions int
+}
 
 type Repository struct {
 	Files            []string
 	ModifiedFiles    []string
 	UntrackedFiles   []string
+	FileChanges      []FileChange
 	PullRequestTitle string
 }
 
@@ -32,10 +40,16 @@ func Inspect(ctx context.Context, dir string) (Repository, error) {
 		return Repository{}, err
 	}
 
+	fileChanges, err := inspectFileChanges(ctx, dir, modified, untracked)
+	if err != nil {
+		return Repository{}, err
+	}
+
 	return Repository{
 		Files:            files,
 		ModifiedFiles:    modified,
 		UntrackedFiles:   untracked,
+		FileChanges:      fileChanges,
 		PullRequestTitle: os.Getenv("DANGER_PR_TITLE"),
 	}, nil
 }
@@ -55,6 +69,12 @@ func changedSinceHead(ctx context.Context, dir string) ([]string, error) {
 func (r Repository) ChangedFiles() []string {
 	seen := map[string]bool{}
 	var files []string
+	for _, change := range r.FileChanges {
+		if !seen[change.Path] {
+			files = append(files, change.Path)
+			seen[change.Path] = true
+		}
+	}
 	for _, file := range append(r.ModifiedFiles, r.UntrackedFiles...) {
 		if !seen[file] {
 			files = append(files, file)
@@ -76,6 +96,58 @@ func (r Repository) HasFile(path string) bool {
 		}
 	}
 	return false
+}
+
+func (r Repository) ChangedLines() int {
+	var lines int
+	for _, change := range r.FileChanges {
+		lines += change.Additions + change.Deletions
+	}
+	return lines
+}
+
+func inspectFileChanges(ctx context.Context, dir string, modified, untracked []string) ([]FileChange, error) {
+	lines, err := gitLines(ctx, dir, "diff", "--numstat", "HEAD")
+	if err != nil {
+		var exitErr *exec.ExitError
+		if !errors.As(err, &exitErr) {
+			return nil, err
+		}
+		lines, err = gitLines(ctx, dir, "diff", "--numstat", "--cached")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	changes := make([]FileChange, 0, len(lines)+len(untracked))
+	seen := map[string]bool{}
+	for _, line := range lines {
+		parts := strings.Split(line, "\t")
+		if len(parts) < 3 {
+			continue
+		}
+		path := parts[2]
+		additions := parseNumstat(parts[0])
+		deletions := parseNumstat(parts[1])
+		changes = append(changes, FileChange{Path: path, Additions: additions, Deletions: deletions})
+		seen[path] = true
+	}
+
+	for _, file := range append(modified, untracked...) {
+		if seen[file] {
+			continue
+		}
+		changes = append(changes, FileChange{Path: file})
+	}
+	return changes, nil
+}
+
+func parseNumstat(value string) int {
+	n, err := strconv.Atoi(value)
+	if err != nil {
+		return 0
+	}
+	return n
 }
 
 func gitLines(ctx context.Context, dir string, args ...string) ([]string, error) {
