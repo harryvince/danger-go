@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -42,6 +44,43 @@ func TestPostReportCommentCreatesWhenNoExistingComment(t *testing.T) {
 
 	if got, want := strings.Join(methods, ","), "GET /repos/o/r/issues/7/comments,POST /repos/o/r/issues/7/comments"; got != want {
 		t.Fatalf("methods = %s, want %s", got, want)
+	}
+}
+
+func TestContextFromActionsReadsPullRequestMetadata(t *testing.T) {
+	t.Setenv("GITHUB_EVENT_NAME", "pull_request")
+	eventPath := filepath.Join(t.TempDir(), "event.json")
+	event := `{
+	  "pull_request": {
+	    "number": 42,
+	    "title": "JIRA-123: add rule",
+	    "body": "Closes JIRA-123",
+	    "head": {"ref": "feature/JIRA-123-rule"},
+	    "labels": [{"name": "ready"}, {"name": "rules"}]
+	  },
+	  "repository": {
+	    "name": "danger-go",
+	    "owner": {"login": "harryvince"}
+	  }
+	}`
+	if err := os.WriteFile(eventPath, []byte(event), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GITHUB_EVENT_PATH", eventPath)
+
+	ctx, err := ContextFromActions()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if ctx.Body != "Closes JIRA-123" {
+		t.Fatalf("body = %q", ctx.Body)
+	}
+	if ctx.Branch != "feature/JIRA-123-rule" {
+		t.Fatalf("branch = %q", ctx.Branch)
+	}
+	if got, want := strings.Join(ctx.Labels, ","), "ready,rules"; got != want {
+		t.Fatalf("labels = %q, want %q", got, want)
 	}
 }
 

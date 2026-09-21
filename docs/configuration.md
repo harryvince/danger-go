@@ -44,6 +44,9 @@ rules:
   max_changed_files: 50
   max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
+  require_linked_issue_pattern: "JIRA-[0-9]+"
+  required_labels:
+    - ready
   required_files:
     - go.mod
     - README.md
@@ -111,6 +114,50 @@ DANGER_PR_TITLE="JIRA-123: add checkout validation" danger-go local
 ```
 
 In GitHub Actions, the title comes from the pull request event payload.
+
+### `require_linked_issue_pattern`
+
+Type: string
+
+Fails when the configured regular expression does not match the pull request title, body, or branch name.
+
+```yaml
+rules:
+  require_linked_issue_pattern: "JIRA-[0-9]+"
+```
+
+This is useful for requiring issue keys such as `JIRA-123` somewhere in the pull request metadata.
+
+In local mode, the searched values come from:
+
+- `DANGER_PR_TITLE`
+- `DANGER_PR_BODY`
+- `DANGER_PR_BRANCH`
+
+In GitHub Actions, values come from the pull request event payload.
+
+### `required_labels`
+
+Type: list of strings
+
+Fails when a listed label is missing from the pull request.
+
+```yaml
+rules:
+  required_labels:
+    - ready
+    - area/docs
+```
+
+Label matching is case-insensitive.
+
+In local mode, labels come from comma-separated `DANGER_PR_LABELS`:
+
+```sh
+DANGER_PR_LABELS="ready,area/docs" danger-go local
+```
+
+In GitHub Actions, labels come from the pull request event payload.
 
 ### `required_files`
 

@@ -15,14 +15,16 @@ type Config struct {
 }
 
 type Rules struct {
-	MaxChangedFiles       int      `yaml:"max_changed_files"`
-	MaxChangedLines       int      `yaml:"max_changed_lines"`
-	RequirePRTitlePattern string   `yaml:"require_pr_title_pattern"`
-	RequiredFiles         []string `yaml:"required_files"`
-	RequiredChangedFiles  []string `yaml:"required_changed_files"`
-	ForbiddenFiles        []string `yaml:"forbidden_files"`
-	WarnFiles             []string `yaml:"warn_files"`
-	WarnDependencyChanges bool     `yaml:"warn_dependency_changes"`
+	MaxChangedFiles           int      `yaml:"max_changed_files"`
+	MaxChangedLines           int      `yaml:"max_changed_lines"`
+	RequirePRTitlePattern     string   `yaml:"require_pr_title_pattern"`
+	RequireLinkedIssuePattern string   `yaml:"require_linked_issue_pattern"`
+	RequiredLabels            []string `yaml:"required_labels"`
+	RequiredFiles             []string `yaml:"required_files"`
+	RequiredChangedFiles      []string `yaml:"required_changed_files"`
+	ForbiddenFiles            []string `yaml:"forbidden_files"`
+	WarnFiles                 []string `yaml:"warn_files"`
+	WarnDependencyChanges     bool     `yaml:"warn_dependency_changes"`
 }
 
 func Load(path string) (Config, string, error) {

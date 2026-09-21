@@ -10,12 +10,14 @@ import (
 func TestEvaluateReportsFailures(t *testing.T) {
 	report := Evaluate(config.Config{
 		Rules: config.Rules{
-			MaxChangedFiles:       1,
-			MaxChangedLines:       5,
-			RequirePRTitlePattern: "^JIRA-\\d+: .+",
-			RequiredFiles:         []string{"README.md"},
-			RequiredChangedFiles:  []string{"docs/**"},
-			ForbiddenFiles:        []string{"*.tmp"},
+			MaxChangedFiles:           1,
+			MaxChangedLines:           5,
+			RequirePRTitlePattern:     "^JIRA-\\d+: .+",
+			RequireLinkedIssuePattern: "JIRA-\\d+",
+			RequiredLabels:            []string{"ready"},
+			RequiredFiles:             []string{"README.md"},
+			RequiredChangedFiles:      []string{"docs/**"},
+			ForbiddenFiles:            []string{"*.tmp"},
 		},
 	}, git.Repository{
 		Files:            []string{"go.mod"},
@@ -27,8 +29,25 @@ func TestEvaluateReportsFailures(t *testing.T) {
 	if !report.HasFailures() {
 		t.Fatal("expected failures")
 	}
-	if len(report.Messages) != 6 {
-		t.Fatalf("message count = %d, want 6", len(report.Messages))
+	if len(report.Messages) != 8 {
+		t.Fatalf("message count = %d, want 8", len(report.Messages))
+	}
+}
+
+func TestEvaluatePassesLabelAndLinkedIssueRules(t *testing.T) {
+	report := Evaluate(config.Config{
+		Rules: config.Rules{
+			RequireLinkedIssuePattern: "JIRA-\\d+",
+			RequiredLabels:            []string{"ready"},
+		},
+	}, git.Repository{
+		PullRequestTitle:  "Update workflow",
+		PullRequestBody:   "Closes JIRA-123",
+		PullRequestLabels: []string{"Ready"},
+	})
+
+	if report.HasFailures() {
+		t.Fatalf("expected no failures, got %#v", report.Messages)
 	}
 }
 

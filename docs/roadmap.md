@@ -2,11 +2,6 @@
 
 `danger-go` is intentionally small today. This roadmap captures likely next steps without promising a specific timeline.
 
-## Possible Rule Ideas
-
-- Require labels.
-- Require linked issue keys.
-
 ## Provider Support
 
 GitHub Actions is the first supported provider.
