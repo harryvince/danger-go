@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/harryvince/danger-go/compare/danger-go-v1.1.0...danger-go-v1.2.0) (2026-09-21)
+
+
+### Features
+
+* add commit policy rules ([3ae4a90](https://github.com/harryvince/danger-go/commit/3ae4a9052c412145ca25a95f183de388416b5ad0))
+
 ## [1.1.0](https://github.com/harryvince/danger-go/compare/danger-go-v1.0.0...danger-go-v1.1.0) (2026-09-21)
 
 
