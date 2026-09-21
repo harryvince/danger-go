@@ -1,0 +1,11 @@
+[project]
+name = "danger-go-docs"
+version = "0.0.0"
+description = "Documentation tooling for danger-go"
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "zensical",
+]
