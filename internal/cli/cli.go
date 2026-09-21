@@ -11,6 +11,7 @@ import (
 	"github.com/harryvince/danger-go/internal/danger"
 	"github.com/harryvince/danger-go/internal/git"
 	"github.com/harryvince/danger-go/internal/github"
+	"github.com/harryvince/danger-go/internal/plugin"
 	"github.com/harryvince/danger-go/internal/version"
 	"github.com/harryvince/danger-go/schema"
 )
@@ -116,6 +117,8 @@ func runChecks(ctx context.Context, mode string, args []string, stdout io.Writer
 	}
 
 	report := danger.Evaluate(cfg, repo)
+	pluginReport := plugin.RunAll(ctx, cfg.Plugins, repo, cfg.Level)
+	report.Messages = append(report.Messages, pluginReport.Messages...)
 	fmt.Fprintf(stdout, "Loaded config: %s\n", path)
 	printReport(stdout, report)
 

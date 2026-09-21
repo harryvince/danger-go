@@ -120,6 +120,40 @@ rules:
 	}
 }
 
+func TestLoadPlugins(t *testing.T) {
+	t.Chdir(t.TempDir())
+	writeFile(t, ".danger.yaml", `plugins:
+  - name: custom
+    command:
+      - go
+      - run
+      - ./tools/policy
+    level: warn
+    timeout: 10s
+    config:
+      owner: platform
+`)
+
+	cfg, _, err := Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got, want := len(cfg.Plugins), 1; got != want {
+		t.Fatalf("plugin count = %d, want %d", got, want)
+	}
+	plugin := cfg.Plugins[0]
+	if plugin.Name != "custom" || plugin.Level != "warn" || plugin.Timeout != "10s" {
+		t.Fatalf("plugin metadata = %#v", plugin)
+	}
+	if got := []string(plugin.Command); len(got) != 3 || got[0] != "go" || got[2] != "./tools/policy" {
+		t.Fatalf("plugin command = %#v", got)
+	}
+	if plugin.Config["owner"] != "platform" {
+		t.Fatalf("plugin config = %#v", plugin.Config)
+	}
+}
+
 func TestLoadRejectsInvalidLevel(t *testing.T) {
 	t.Chdir(t.TempDir())
 	writeFile(t, ".danger.yaml", "level: info\nrules:\n  max_changed_files: 3\n")
