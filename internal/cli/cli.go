@@ -11,6 +11,7 @@ import (
 	"github.com/harryvince/danger-go/internal/danger"
 	"github.com/harryvince/danger-go/internal/git"
 	"github.com/harryvince/danger-go/internal/github"
+	"github.com/harryvince/danger-go/internal/version"
 )
 
 const usage = `danger-go
@@ -18,10 +19,12 @@ const usage = `danger-go
 Usage:
   danger-go local [--config path]
   danger-go ci    [--config path]
+  danger-go version
 
 Commands:
   local   Run checks against the local git working tree.
   ci      Run checks using GitHub Actions metadata when available.
+  version Print the danger-go version.
 `
 
 func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
@@ -33,6 +36,9 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	switch args[0] {
 	case "local", "ci":
 		return runChecks(ctx, args[0], args[1:], stdout)
+	case "version":
+		fmt.Fprintln(stdout, version.Info())
+		return nil
 	case "-h", "--help", "help":
 		fmt.Fprint(stdout, usage)
 		return nil

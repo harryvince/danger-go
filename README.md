@@ -84,6 +84,12 @@ For pull requests from forks, GitHub may restrict `GITHUB_TOKEN` permissions.
 go run ./cmd/danger-go local
 ```
 
+Print the CLI version:
+
+```sh
+go run ./cmd/danger-go version
+```
+
 ## Configuration
 
 ```yaml

@@ -77,3 +77,11 @@ Or use `--config` locally:
 ```sh
 go run github.com/harryvince/danger-go/cmd/danger-go@latest local --config .github/danger.yaml
 ```
+
+## Version
+
+Print the installed version:
+
+```sh
+go run github.com/harryvince/danger-go/cmd/danger-go@latest version
+```
