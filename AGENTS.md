@@ -129,7 +129,7 @@ https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 Supported settings live under `rules`:
 
 ```yaml
-$schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+# yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 rules:
   max_changed_files: 50
   max_changed_lines: 500
