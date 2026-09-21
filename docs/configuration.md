@@ -25,6 +25,7 @@ Add a YAML language server annotation to a config file for editor support:
 
 ```yaml
 # yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+level: fail
 rules:
   max_changed_files: 50
 ```
@@ -53,13 +54,16 @@ danger-go validate --config .github/danger.yaml
 
 ```yaml
 # yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+level: fail
 rules:
   max_changed_files: 50
   max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
   require_linked_issue_pattern: "JIRA-[0-9]+"
   require_conventional_commits: true
-  require_squashed_commits: warn
+  require_squashed_commits:
+    enabled: true
+    level: warn
   required_labels:
     - ready
   required_files:
@@ -79,13 +83,40 @@ rules:
 
 | Setting | Type | Required | Description |
 | --- | --- | --- | --- |
+| `level` | `warn` or `fail` | no | Default level for configured rules. Defaults to each rule's historical behavior when omitted. |
 | `rules` | object | no | Rule configuration. If omitted, no rules are evaluated. |
+
+## Rule Levels
+
+Every rule can either use its shorthand value or an object form with `level`.
+
+```yaml
+level: warn
+rules:
+  max_changed_files:
+    value: 25
+    level: fail
+  required_labels:
+    values:
+      - ready
+    level: warn
+  warn_dependency_changes:
+    enabled: true
+    level: fail
+```
+
+Allowed levels:
+
+- `warn` reports a warning and does not fail the check.
+- `fail` reports a failure and fails the check.
+
+If a rule has its own `level`, that wins. Otherwise `danger-go` uses the top-level `level`. If neither is set, rules keep their original default: most rules fail, while `warn_files`, `warn_dependency_changes`, and `require_squashed_commits: warn` warn.
 
 ## Rule Settings
 
 ### `max_changed_files`
 
-Type: integer
+Type: integer or object
 
 Fails when the number of changed files is greater than the configured value.
 
@@ -94,11 +125,20 @@ rules:
   max_changed_files: 50
 ```
 
+With an explicit level:
+
+```yaml
+rules:
+  max_changed_files:
+    value: 50
+    level: warn
+```
+
 Set to `0` or omit the setting to disable this rule.
 
 ### `max_changed_lines`
 
-Type: integer
+Type: integer or object
 
 Fails when the number of added plus deleted lines is greater than the configured value.
 
@@ -111,13 +151,22 @@ Set to `0` or omit the setting to disable this rule.
 
 ### `require_pr_title_pattern`
 
-Type: string
+Type: string or object
 
 Fails when the pull request title does not match the configured regular expression.
 
 ```yaml
 rules:
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
+```
+
+With an explicit level:
+
+```yaml
+rules:
+  require_pr_title_pattern:
+    value: "^JIRA-[0-9]+: .+"
+    level: warn
 ```
 
 This uses Go regular expression syntax.
@@ -132,7 +181,7 @@ In GitHub Actions, the title comes from the pull request event payload.
 
 ### `require_linked_issue_pattern`
 
-Type: string
+Type: string or object
 
 Fails when the configured regular expression does not match the pull request title, body, or branch name.
 
@@ -153,13 +202,22 @@ In GitHub Actions, values come from the pull request event payload.
 
 ### `require_conventional_commits`
 
-Type: boolean
+Type: boolean or object
 
 Fails when any pull request commit subject does not follow Conventional Commits.
 
 ```yaml
 rules:
   require_conventional_commits: true
+```
+
+With an explicit level:
+
+```yaml
+rules:
+  require_conventional_commits:
+    enabled: true
+    level: warn
 ```
 
 Accepted examples:
@@ -180,7 +238,7 @@ In GitHub Actions, commit subjects come from the pull request commits API.
 
 ### `require_squashed_commits`
 
-Type: string
+Type: string or object
 
 Allowed values:
 
@@ -201,11 +259,20 @@ rules:
   require_squashed_commits: fail
 ```
 
+Object form:
+
+```yaml
+rules:
+  require_squashed_commits:
+    enabled: true
+    level: warn
+```
+
 In local mode, commit subjects come from the same sources as `require_conventional_commits`. In GitHub Actions, the count comes from the pull request commits API.
 
 ### `required_labels`
 
-Type: list of strings
+Type: list of strings or object
 
 Fails when a listed label is missing from the pull request.
 
@@ -214,6 +281,17 @@ rules:
   required_labels:
     - ready
     - area/docs
+```
+
+With an explicit level:
+
+```yaml
+rules:
+  required_labels:
+    values:
+      - ready
+      - area/docs
+    level: warn
 ```
 
 Label matching is case-insensitive.
@@ -228,7 +306,7 @@ In GitHub Actions, labels come from the pull request event payload.
 
 ### `required_files`
 
-Type: list of strings
+Type: list of strings or object
 
 Fails when a listed file is missing from the repository.
 
@@ -243,7 +321,7 @@ This is useful for keeping baseline repository files present.
 
 ### `required_changed_files`
 
-Type: list of strings
+Type: list of strings or object
 
 Fails when no changed file matches a listed path or glob pattern.
 
@@ -258,7 +336,7 @@ This is useful for policies like requiring documentation updates. Each listed pa
 
 ### `forbidden_files`
 
-Type: list of strings
+Type: list of strings or object
 
 Fails when a changed file matches one of the configured paths or glob patterns.
 
@@ -273,7 +351,7 @@ Patterns use Go `filepath.Match` behavior. Exact path matches are also supported
 
 ### `warn_files`
 
-Type: list of strings
+Type: list of strings or object
 
 Adds a warning when a changed file matches one of the configured paths or glob patterns.
 
@@ -284,17 +362,35 @@ rules:
     - "*.lock"
 ```
 
-Warnings are reported in the PR comment but do not fail the check.
+Warnings are reported in the PR comment but do not fail the check. Use object form with `level: fail` to turn watched files into failures:
+
+```yaml
+rules:
+  warn_files:
+    values:
+      - generated/**
+      - "*.lock"
+    level: fail
+```
 
 ### `warn_dependency_changes`
 
-Type: boolean
+Type: boolean or object
 
 Adds a warning when common dependency manifests or lockfiles change.
 
 ```yaml
 rules:
   warn_dependency_changes: true
+```
+
+Use object form with `level: fail` to fail dependency manifest changes:
+
+```yaml
+rules:
+  warn_dependency_changes:
+    enabled: true
+    level: fail
 ```
 
 Currently watched files include common Go, Node, Ruby, Rust, and Python dependency files such as `go.mod`, `package.json`, `Gemfile.lock`, `Cargo.lock`, and `requirements.txt`.

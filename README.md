@@ -102,13 +102,16 @@ Release binaries are attached to GitHub releases for Linux, macOS, and Windows o
 
 ```yaml
 # yaml-language-server: $schema=https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+level: fail
 rules:
   max_changed_files: 50
   max_changed_lines: 500
   require_pr_title_pattern: ".+"
   require_linked_issue_pattern: "JIRA-[0-9]+"
   require_conventional_commits: true
-  require_squashed_commits: warn
+  require_squashed_commits:
+    enabled: true
+    level: warn
   required_labels:
     - ready
   required_files:

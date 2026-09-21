@@ -10,14 +10,14 @@ import (
 func TestEvaluateReportsFailures(t *testing.T) {
 	report := Evaluate(config.Config{
 		Rules: config.Rules{
-			MaxChangedFiles:           1,
-			MaxChangedLines:           5,
-			RequirePRTitlePattern:     "^JIRA-\\d+: .+",
-			RequireLinkedIssuePattern: "JIRA-\\d+",
-			RequiredLabels:            []string{"ready"},
-			RequiredFiles:             []string{"README.md"},
-			RequiredChangedFiles:      []string{"docs/**"},
-			ForbiddenFiles:            []string{"*.tmp"},
+			MaxChangedFiles:           config.IntRule{Value: 1},
+			MaxChangedLines:           config.IntRule{Value: 5},
+			RequirePRTitlePattern:     config.StringRule{Value: "^JIRA-\\d+: .+"},
+			RequireLinkedIssuePattern: config.StringRule{Value: "JIRA-\\d+"},
+			RequiredLabels:            config.StringListRule{Values: []string{"ready"}},
+			RequiredFiles:             config.StringListRule{Values: []string{"README.md"}},
+			RequiredChangedFiles:      config.StringListRule{Values: []string{"docs/**"}},
+			ForbiddenFiles:            config.StringListRule{Values: []string{"*.tmp"}},
 		},
 	}, git.Repository{
 		Files:            []string{"go.mod"},
@@ -37,8 +37,8 @@ func TestEvaluateReportsFailures(t *testing.T) {
 func TestEvaluatePassesLabelAndLinkedIssueRules(t *testing.T) {
 	report := Evaluate(config.Config{
 		Rules: config.Rules{
-			RequireLinkedIssuePattern: "JIRA-\\d+",
-			RequiredLabels:            []string{"ready"},
+			RequireLinkedIssuePattern: config.StringRule{Value: "JIRA-\\d+"},
+			RequiredLabels:            config.StringListRule{Values: []string{"ready"}},
 		},
 	}, git.Repository{
 		PullRequestTitle:  "Update workflow",
@@ -54,8 +54,8 @@ func TestEvaluatePassesLabelAndLinkedIssueRules(t *testing.T) {
 func TestEvaluateReportsWarnings(t *testing.T) {
 	report := Evaluate(config.Config{
 		Rules: config.Rules{
-			WarnFiles:             []string{"generated/**"},
-			WarnDependencyChanges: true,
+			WarnFiles:             config.StringListRule{Values: []string{"generated/**"}},
+			WarnDependencyChanges: config.BoolRule{Enabled: true},
 		},
 	}, git.Repository{
 		FileChanges: []git.FileChange{
@@ -80,7 +80,7 @@ func TestEvaluateReportsWarnings(t *testing.T) {
 func TestEvaluateRequiresConventionalCommits(t *testing.T) {
 	report := Evaluate(config.Config{
 		Rules: config.Rules{
-			RequireConventionalCommits: true,
+			RequireConventionalCommits: config.BoolRule{Enabled: true},
 		},
 	}, git.Repository{
 		Commits: []git.Commit{
@@ -100,7 +100,7 @@ func TestEvaluateRequiresConventionalCommits(t *testing.T) {
 func TestEvaluateWarnsWhenSquashRequiredAsWarning(t *testing.T) {
 	report := Evaluate(config.Config{
 		Rules: config.Rules{
-			RequireSquashedCommits: "warn",
+			RequireSquashedCommits: config.SquashRule{Enabled: true, Level: "warn"},
 		},
 	}, git.Repository{
 		Commits: []git.Commit{
@@ -123,7 +123,7 @@ func TestEvaluateWarnsWhenSquashRequiredAsWarning(t *testing.T) {
 func TestEvaluateFailsWhenSquashRequiredAsFailure(t *testing.T) {
 	report := Evaluate(config.Config{
 		Rules: config.Rules{
-			RequireSquashedCommits: "fail",
+			RequireSquashedCommits: config.SquashRule{Enabled: true, Level: "fail"},
 		},
 	}, git.Repository{
 		Commits: []git.Commit{
@@ -137,15 +137,39 @@ func TestEvaluateFailsWhenSquashRequiredAsFailure(t *testing.T) {
 	}
 }
 
-func TestEvaluateRejectsInvalidSquashMode(t *testing.T) {
+func TestEvaluateUsesTopLevelRuleLevel(t *testing.T) {
 	report := Evaluate(config.Config{
+		Level: "warn",
 		Rules: config.Rules{
-			RequireSquashedCommits: "deny",
+			MaxChangedFiles: config.IntRule{Value: 1},
 		},
-	}, git.Repository{})
+	}, git.Repository{
+		ModifiedFiles: []string{"one.go", "two.go"},
+	})
+
+	if report.HasFailures() {
+		t.Fatal("top-level warning should not fail the report")
+	}
+	if got, want := len(report.Messages), 1; got != want {
+		t.Fatalf("message count = %d, want %d", got, want)
+	}
+	if report.Messages[0].Level != LevelWarn {
+		t.Fatalf("message level = %q, want warn", report.Messages[0].Level)
+	}
+}
+
+func TestEvaluateUsesRuleLevelOverride(t *testing.T) {
+	report := Evaluate(config.Config{
+		Level: "warn",
+		Rules: config.Rules{
+			MaxChangedFiles: config.IntRule{Value: 1, Level: "fail"},
+		},
+	}, git.Repository{
+		ModifiedFiles: []string{"one.go", "two.go"},
+	})
 
 	if !report.HasFailures() {
-		t.Fatal("expected invalid squash mode to fail")
+		t.Fatal("rule-level failure should fail the report")
 	}
 }
 

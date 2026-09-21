@@ -28,6 +28,23 @@ rules:
   max_changed_lines: 500
 ```
 
+## Warning-Only Policy
+
+Make configured rules warn by default, then promote selected rules to failures:
+
+```yaml
+level: warn
+rules:
+  max_changed_files:
+    value: 25
+    level: fail
+  required_labels:
+    values:
+      - ready
+    level: fail
+  warn_dependency_changes: true
+```
+
 ## Ticket-Based Titles
 
 Require a ticket key at the start of every pull request title:
@@ -183,13 +200,16 @@ rules:
 ## Combined Policy
 
 ```yaml
+level: fail
 rules:
   max_changed_files: 50
   max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
   require_linked_issue_pattern: "JIRA-[0-9]+"
   require_conventional_commits: true
-  require_squashed_commits: warn
+  require_squashed_commits:
+    enabled: true
+    level: warn
   required_labels:
     - ready
   required_files:

@@ -57,99 +57,115 @@ func Evaluate(cfg config.Config, repo git.Repository) Report {
 	var report Report
 
 	changedFiles := repo.ChangedFiles()
-	if cfg.Rules.MaxChangedFiles > 0 && len(changedFiles) > cfg.Rules.MaxChangedFiles {
-		report.fail(fmt.Sprintf("PR changes %d files, above the configured limit of %d", len(changedFiles), cfg.Rules.MaxChangedFiles))
+	if cfg.Rules.MaxChangedFiles.Value > 0 && len(changedFiles) > cfg.Rules.MaxChangedFiles.Value {
+		report.add(ruleLevel(cfg, cfg.Rules.MaxChangedFiles.Level, LevelFail), fmt.Sprintf("PR changes %d files, above the configured limit of %d", len(changedFiles), cfg.Rules.MaxChangedFiles.Value))
 	}
 
 	changedLines := repo.ChangedLines()
-	if cfg.Rules.MaxChangedLines > 0 && changedLines > cfg.Rules.MaxChangedLines {
-		report.fail(fmt.Sprintf("PR changes %d lines, above the configured limit of %d", changedLines, cfg.Rules.MaxChangedLines))
+	if cfg.Rules.MaxChangedLines.Value > 0 && changedLines > cfg.Rules.MaxChangedLines.Value {
+		report.add(ruleLevel(cfg, cfg.Rules.MaxChangedLines.Level, LevelFail), fmt.Sprintf("PR changes %d lines, above the configured limit of %d", changedLines, cfg.Rules.MaxChangedLines.Value))
 	}
 
-	if cfg.Rules.RequirePRTitlePattern != "" {
-		matched, err := regexp.MatchString(cfg.Rules.RequirePRTitlePattern, repo.PullRequestTitle)
+	if cfg.Rules.RequirePRTitlePattern.Value != "" {
+		level := ruleLevel(cfg, cfg.Rules.RequirePRTitlePattern.Level, LevelFail)
+		matched, err := regexp.MatchString(cfg.Rules.RequirePRTitlePattern.Value, repo.PullRequestTitle)
 		if err != nil {
 			report.fail(fmt.Sprintf("invalid require_pr_title_pattern: %s", err))
 		} else if !matched {
-			report.fail(fmt.Sprintf("PR title %q does not match %q", repo.PullRequestTitle, cfg.Rules.RequirePRTitlePattern))
+			report.add(level, fmt.Sprintf("PR title %q does not match %q", repo.PullRequestTitle, cfg.Rules.RequirePRTitlePattern.Value))
 		}
 	}
 
-	if cfg.Rules.RequireLinkedIssuePattern != "" {
+	if cfg.Rules.RequireLinkedIssuePattern.Value != "" {
+		level := ruleLevel(cfg, cfg.Rules.RequireLinkedIssuePattern.Level, LevelFail)
 		text := strings.Join([]string{repo.PullRequestTitle, repo.PullRequestBody, repo.PullRequestBranch}, "\n")
-		matched, err := regexp.MatchString(cfg.Rules.RequireLinkedIssuePattern, text)
+		matched, err := regexp.MatchString(cfg.Rules.RequireLinkedIssuePattern.Value, text)
 		if err != nil {
 			report.fail(fmt.Sprintf("invalid require_linked_issue_pattern: %s", err))
 		} else if !matched {
-			report.fail(fmt.Sprintf("PR title, body, or branch does not match linked issue pattern %q", cfg.Rules.RequireLinkedIssuePattern))
+			report.add(level, fmt.Sprintf("PR title, body, or branch does not match linked issue pattern %q", cfg.Rules.RequireLinkedIssuePattern.Value))
 		}
 	}
 
-	if cfg.Rules.RequireConventionalCommits {
+	if cfg.Rules.RequireConventionalCommits.Enabled {
+		level := ruleLevel(cfg, cfg.Rules.RequireConventionalCommits.Level, LevelFail)
 		for _, commit := range repo.Commits {
 			if !conventionalCommitPattern.MatchString(commit.Subject) {
-				report.fail(fmt.Sprintf("commit subject %q is not conventional", commit.Subject))
+				report.add(level, fmt.Sprintf("commit subject %q is not conventional", commit.Subject))
 			}
 		}
 	}
 
-	switch cfg.Rules.RequireSquashedCommits {
-	case "fail":
+	if cfg.Rules.RequireSquashedCommits.Enabled {
+		level := ruleLevel(cfg, cfg.Rules.RequireSquashedCommits.Level, LevelFail)
 		if len(repo.Commits) > 1 {
-			report.fail(fmt.Sprintf("PR has %d commits; squash to a single commit before merging", len(repo.Commits)))
+			report.add(level, fmt.Sprintf("PR has %d commits; squash to a single commit before merging", len(repo.Commits)))
 		}
-	case "warn":
-		if len(repo.Commits) > 1 {
-			report.warn(fmt.Sprintf("PR has %d commits; consider squashing before merging", len(repo.Commits)))
-		}
-	case "":
-	default:
-		report.fail(fmt.Sprintf("invalid require_squashed_commits value %q; use \"warn\" or \"fail\"", cfg.Rules.RequireSquashedCommits))
 	}
 
-	for _, label := range cfg.Rules.RequiredLabels {
+	for _, label := range cfg.Rules.RequiredLabels.Values {
 		if !hasLabel(repo.PullRequestLabels, label) {
-			report.fail(fmt.Sprintf("required label is missing: %s", label))
+			report.add(ruleLevel(cfg, cfg.Rules.RequiredLabels.Level, LevelFail), fmt.Sprintf("required label is missing: %s", label))
 		}
 	}
 
-	for _, required := range cfg.Rules.RequiredFiles {
+	for _, required := range cfg.Rules.RequiredFiles.Values {
 		if !repo.HasFile(required) {
-			report.fail(fmt.Sprintf("required file is missing: %s", required))
+			report.add(ruleLevel(cfg, cfg.Rules.RequiredFiles.Level, LevelFail), fmt.Sprintf("required file is missing: %s", required))
 		}
 	}
 
-	for _, required := range cfg.Rules.RequiredChangedFiles {
+	for _, required := range cfg.Rules.RequiredChangedFiles.Values {
 		if !hasChangedFile(changedFiles, required) {
-			report.fail(fmt.Sprintf("required changed file pattern is missing: %s", required))
+			report.add(ruleLevel(cfg, cfg.Rules.RequiredChangedFiles.Level, LevelFail), fmt.Sprintf("required changed file pattern is missing: %s", required))
 		}
 	}
 
-	for _, forbidden := range cfg.Rules.ForbiddenFiles {
+	for _, forbidden := range cfg.Rules.ForbiddenFiles.Values {
 		for _, changed := range changedFiles {
 			if matchedPath(forbidden, changed) {
-				report.fail(fmt.Sprintf("forbidden file changed: %s", changed))
+				report.add(ruleLevel(cfg, cfg.Rules.ForbiddenFiles.Level, LevelFail), fmt.Sprintf("forbidden file changed: %s", changed))
 			}
 		}
 	}
 
-	for _, warning := range cfg.Rules.WarnFiles {
+	for _, warning := range cfg.Rules.WarnFiles.Values {
 		for _, changed := range changedFiles {
 			if matchedPath(warning, changed) {
-				report.warn(fmt.Sprintf("watched file changed: %s", changed))
+				report.add(ruleLevel(cfg, cfg.Rules.WarnFiles.Level, LevelWarn), fmt.Sprintf("watched file changed: %s", changed))
 			}
 		}
 	}
 
-	if cfg.Rules.WarnDependencyChanges {
+	if cfg.Rules.WarnDependencyChanges.Enabled {
 		for _, changed := range changedFiles {
 			if matchesAny(dependencyManifestPatterns, changed) {
-				report.warn(fmt.Sprintf("dependency manifest changed: %s", changed))
+				report.add(ruleLevel(cfg, cfg.Rules.WarnDependencyChanges.Level, LevelWarn), fmt.Sprintf("dependency manifest changed: %s", changed))
 			}
 		}
 	}
 
 	return report
+}
+
+func ruleLevel(cfg config.Config, configured string, fallback Level) Level {
+	switch configured {
+	case string(LevelFail):
+		return LevelFail
+	case string(LevelWarn):
+		return LevelWarn
+	}
+	switch cfg.Level {
+	case string(LevelFail):
+		return LevelFail
+	case string(LevelWarn):
+		return LevelWarn
+	}
+	return fallback
+}
+
+func (r *Report) add(level Level, text string) {
+	r.Messages = append(r.Messages, Message{Level: level, Text: text})
 }
 
 func (r *Report) fail(text string) {
