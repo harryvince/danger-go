@@ -1,0 +1,42 @@
+name: danger-go
+description: Run danger-go checks on pull requests.
+author: Harry Vince
+
+inputs:
+  config:
+    description: Path to the danger-go config file.
+    required: false
+    default: ""
+  github-token:
+    description: GitHub token used to read pull request metadata and post comments.
+    required: false
+    default: ""
+  go-version:
+    description: Go version to install.
+    required: false
+    default: stable
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+    - name: Run danger-go
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token || github.token }}
+      run: |
+        set -euo pipefail
+
+        args=(ci)
+        if [[ -n "${{ inputs.config }}" ]]; then
+          args+=(--config "${{ inputs.config }}")
+        fi
+
+        if [[ -n "${GITHUB_ACTION_REF:-}" ]]; then
+          go run "github.com/harryvince/danger-go/cmd/danger-go@${GITHUB_ACTION_REF}" "${args[@]}"
+        else
+          go run "${GITHUB_ACTION_PATH}/cmd/danger-go" "${args[@]}"
+        fi
