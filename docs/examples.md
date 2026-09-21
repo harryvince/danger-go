@@ -2,6 +2,12 @@
 
 These examples show common ways to configure `danger-go`.
 
+For editor validation, add the published JSON Schema URI to your config:
+
+```yaml
+$schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+```
+
 ## Small Pull Requests
 
 Fail pull requests that change more than 25 files:

@@ -4,11 +4,15 @@ uv = "latest"
 
 [tasks."docs:build"]
 description = "Build the Zensical documentation site"
-run = "uv run zensical build --clean"
+run = "scripts/build-docs.sh"
 
 [tasks."docs:serve"]
 description = "Preview the Zensical documentation site locally"
 run = "uv run zensical serve"
+
+[tasks."schema:check"]
+description = "Validate the sample danger-go config against the JSON Schema"
+run = "uv run check-jsonschema --schemafile schema/danger-go.schema.json .danger.yaml"
 
 [tasks."release:build"]
 description = "Build local release archives into dist/"
