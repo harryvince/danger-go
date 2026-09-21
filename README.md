@@ -90,6 +90,12 @@ Print the CLI version:
 go run ./cmd/danger-go version
 ```
 
+Validate the config against the bundled JSON Schema:
+
+```sh
+go run ./cmd/danger-go validate
+```
+
 Release binaries are attached to GitHub releases for Linux, macOS, and Windows on amd64 and arm64.
 
 ## Configuration

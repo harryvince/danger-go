@@ -37,6 +37,18 @@ This repository validates its sample config with:
 mise run schema:check
 ```
 
+You can also use the built-in validation command:
+
+```sh
+danger-go validate
+```
+
+Validate a custom config path:
+
+```sh
+danger-go validate --config .github/danger.yaml
+```
+
 ## Full Example
 
 ```yaml
@@ -249,3 +261,8 @@ Rules that accept file patterns support:
 - non-zero when configuration or provider setup cannot be read.
 
 GitHub comment posting errors are reported but do not fail the check. Rule results decide whether the check passes or fails.
+
+`danger-go validate` exits with:
+
+- `0` when the config matches the JSON Schema.
+- non-zero when the config is missing, malformed, or does not match the schema.

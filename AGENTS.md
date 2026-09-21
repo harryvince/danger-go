@@ -89,6 +89,12 @@ Validate the sample config against the JSON Schema:
 mise run schema:check
 ```
 
+Validate via the built-in CLI command:
+
+```sh
+go run ./cmd/danger-go validate
+```
+
 Build docs:
 
 ```sh
