@@ -6,6 +6,8 @@ A small Go-native experiment inspired by Danger.
 
 This repository dogfoods `danger-go` in GitHub Actions.
 
+PR comment posting is verified with a same-repository test pull request.
+
 ## Usage
 
 ```sh
