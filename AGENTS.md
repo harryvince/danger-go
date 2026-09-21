@@ -237,11 +237,10 @@ Release Please is configured with:
 - `release-please-config.json`
 - `.release-please-manifest.json`
 
-Open release PR at the time this file was written:
+Upstream projects:
 
-```text
-https://github.com/harryvince/danger-go/pull/3
-```
+- `googleapis/release-please`
+- `googleapis/release-please-action`
 
 Do not manually edit generated release PR content unless necessary. Prefer making normal conventional commits to `main` and let Release Please update the PR.
 
