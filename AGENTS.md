@@ -221,6 +221,7 @@ Current docs:
 - `docs/quickstart.md`
 - `docs/configuration.md`
 - `docs/github-action.md`
+- `docs/changelog.md`
 - `docs/roadmap.md`
 
 Keep README concise and link deeper docs rather than duplicating everything.

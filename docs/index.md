@@ -55,4 +55,5 @@ Those are possible future directions, but the current project is a practical Go-
 - [Quickstart](quickstart.md)
 - [GitHub Action](github-action.md)
 - [Configuration](configuration.md)
+- [Changelog](changelog.md)
 - [Roadmap](roadmap.md)
