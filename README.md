@@ -28,8 +28,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: harryvince/danger-go@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 Then add `.danger.yaml` or `.danger.yml` to the repository.
@@ -41,10 +39,14 @@ The action checks out the repository, installs Go, runs `danger-go ci`, reads pu
 | Input | Default | Description |
 | --- | --- | --- |
 | `config` | auto-detect | Path to `.danger.yaml` or `.danger.yml`. |
-| `github-token` | `${{ github.token }}` | Token used to read pull request metadata and post comments. |
+| `github-token` | automatic `${{ github.token }}` | Optional token used to read pull request metadata and post comments. |
 | `go-version` | `stable` | Go version passed to `actions/setup-go`. |
 
-For pull request comments, the workflow needs:
+### Token and Permissions
+
+You do not need to create a personal access token for normal use. GitHub automatically provides `${{ github.token }}` to every workflow run, and the action uses it by default.
+
+The workflow permissions decide what that automatic token is allowed to do. For pull request comments, set:
 
 ```yaml
 permissions:
@@ -52,6 +54,10 @@ permissions:
   pull-requests: write
   issues: write
 ```
+
+`contents: read` lets the action check out and inspect the repository. `pull-requests: write` allows pull request operations. `issues: write` is needed because GitHub pull request comments use the Issues comments API.
+
+Pass `github-token` only if you have a specific reason to use a different token, such as a GitHub App token or a repository policy that prevents the automatic token from doing what you need.
 
 For pull requests from forks, GitHub may restrict `GITHUB_TOKEN` permissions.
 
