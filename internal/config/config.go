@@ -11,8 +11,9 @@ import (
 var defaultPaths = []string{".danger.yaml", ".danger.yml"}
 
 type Config struct {
-	Level string `yaml:"level"`
-	Rules Rules  `yaml:"rules"`
+	Level   string   `yaml:"level"`
+	Rules   Rules    `yaml:"rules"`
+	Plugins []Plugin `yaml:"plugins"`
 }
 
 type Rules struct {
@@ -54,6 +55,16 @@ type SquashRule struct {
 	Enabled bool
 	Level   string
 }
+
+type Plugin struct {
+	Name    string         `yaml:"name"`
+	Command Command        `yaml:"command"`
+	Level   string         `yaml:"level"`
+	Timeout string         `yaml:"timeout"`
+	Config  map[string]any `yaml:"config"`
+}
+
+type Command []string
 
 func (r *IntRule) UnmarshalYAML(value *yaml.Node) error {
 	switch value.Kind {
@@ -132,6 +143,27 @@ func (r *StringListRule) UnmarshalYAML(value *yaml.Node) error {
 		return nil
 	default:
 		return fmt.Errorf("expected string list or rule object")
+	}
+}
+
+func (c *Command) UnmarshalYAML(value *yaml.Node) error {
+	switch value.Kind {
+	case yaml.ScalarNode:
+		var command string
+		if err := value.Decode(&command); err != nil {
+			return err
+		}
+		*c = []string{command}
+		return nil
+	case yaml.SequenceNode:
+		var command []string
+		if err := value.Decode(&command); err != nil {
+			return err
+		}
+		*c = command
+		return nil
+	default:
+		return fmt.Errorf("expected string or string list")
 	}
 }
 
@@ -225,6 +257,18 @@ func (c Config) Validate() error {
 	}
 	for name, level := range checks {
 		if err := validateLevel(name, level, true); err != nil {
+			return err
+		}
+	}
+	for i, plugin := range c.Plugins {
+		prefix := fmt.Sprintf("plugins[%d]", i)
+		if plugin.Name == "" {
+			return fmt.Errorf("%s.name is required", prefix)
+		}
+		if len(plugin.Command) == 0 {
+			return fmt.Errorf("%s.command is required", prefix)
+		}
+		if err := validateLevel(prefix+".level", plugin.Level, true); err != nil {
 			return err
 		}
 	}

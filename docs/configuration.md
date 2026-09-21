@@ -77,6 +77,15 @@ rules:
   warn_files:
     - generated/**
   warn_dependency_changes: true
+plugins:
+  - name: generated-code-check
+    command:
+      - ./scripts/check-generated.sh
+    level: warn
+    timeout: 10s
+    config:
+      paths:
+        - generated/**
 ```
 
 ## Top-Level Settings
@@ -84,7 +93,8 @@ rules:
 | Setting | Type | Required | Description |
 | --- | --- | --- | --- |
 | `level` | `warn` or `fail` | no | Default level for configured rules. Defaults to each rule's historical behavior when omitted. |
-| `rules` | object | no | Rule configuration. If omitted, no rules are evaluated. |
+| `rules` | object | no | Rule configuration. If omitted, no built-in rules are evaluated. |
+| `plugins` | array | no | External command plugins to run after built-in rules. |
 
 ## Rule Levels
 
@@ -417,3 +427,39 @@ GitHub comment posting errors are reported but do not fail the check. Rule resul
 
 - `0` when the config matches the JSON Schema.
 - non-zero when the config is missing, malformed, or does not match the schema.
+
+## Command Plugins
+
+`plugins` let repositories run custom policy checks outside the built-in rule set. A plugin is an external command. `danger-go` sends a JSON request on standard input and expects a JSON response on standard output.
+
+```yaml
+plugins:
+  - name: custom-policy
+    command:
+      - go
+      - run
+      - ./tools/danger-policy
+    level: fail
+    timeout: 30s
+    config:
+      required_owner: platform
+```
+
+`command` can be a single string or a list of command arguments. The list form is recommended because it avoids shell quoting issues.
+
+Plugin response format:
+
+```json
+{
+  "messages": [
+    {
+      "level": "warn",
+      "text": "Generated files changed"
+    }
+  ]
+}
+```
+
+Allowed message levels are `warn` and `fail`. If a message omits `level`, `danger-go` uses the plugin `level`, then the top-level `level`, then `fail`.
+
+Plugin failures, invalid JSON, and timeouts are reported as failures. The default timeout is `30s`.

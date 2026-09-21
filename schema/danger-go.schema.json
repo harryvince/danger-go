@@ -68,6 +68,13 @@
           "description": "Warn when common dependency manifests or lockfiles change."
         }
       }
+    },
+    "plugins": {
+      "type": "array",
+      "description": "External command plugins to run after built-in rules.",
+      "items": {
+        "$ref": "#/$defs/plugin"
+      }
     }
   },
   "$defs": {
@@ -184,6 +191,44 @@
         "minLength": 1
       },
       "uniqueItems": true
+    },
+    "plugin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "command"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          ]
+        },
+        "level": {
+          "$ref": "#/$defs/level"
+        },
+        "timeout": {
+          "type": "string",
+          "description": "Go duration string such as 10s or 1m. Defaults to 30s."
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
     }
   }
 }
