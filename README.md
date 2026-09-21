@@ -4,6 +4,8 @@ A small Go-native experiment inspired by Danger.
 
 `danger-go` reads `.danger.yaml` or `.danger.yml`, inspects the repository, and reports policy failures. The first version is intentionally config-driven so it can run as a single binary without Ruby.
 
+This repository dogfoods `danger-go` in GitHub Actions.
+
 ## Usage
 
 ```sh
