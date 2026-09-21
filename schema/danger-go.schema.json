@@ -10,66 +10,173 @@
       "type": "string",
       "description": "Optional JSON Schema URI used by editors and YAML language servers."
     },
+    "level": {
+      "$ref": "#/$defs/level",
+      "description": "Default level for configured rules. Individual rules can override this."
+    },
     "rules": {
       "type": "object",
       "description": "Rule configuration.",
       "additionalProperties": false,
       "properties": {
         "max_changed_files": {
-          "type": "integer",
-          "minimum": 0,
+          "$ref": "#/$defs/intRule",
           "description": "Fail when the number of changed files is greater than this value. Set to 0 or omit to disable."
         },
         "max_changed_lines": {
-          "type": "integer",
-          "minimum": 0,
+          "$ref": "#/$defs/intRule",
           "description": "Fail when added plus deleted lines are greater than this value. Set to 0 or omit to disable."
         },
         "require_pr_title_pattern": {
-          "type": "string",
+          "$ref": "#/$defs/stringRule",
           "description": "Go regular expression that the pull request title must match."
         },
         "require_linked_issue_pattern": {
-          "type": "string",
+          "$ref": "#/$defs/stringRule",
           "description": "Go regular expression that must match the pull request title, body, or branch name."
         },
         "require_conventional_commits": {
-          "type": "boolean",
+          "$ref": "#/$defs/boolRule",
           "description": "Fail when any pull request commit subject is not a Conventional Commit."
         },
         "require_squashed_commits": {
-          "type": "string",
-          "enum": ["warn", "fail"],
+          "$ref": "#/$defs/squashRule",
           "description": "Warn or fail when a pull request has more than one commit."
         },
         "required_labels": {
-          "$ref": "#/$defs/stringList",
+          "$ref": "#/$defs/stringListRule",
           "description": "Pull request labels that must be present."
         },
         "required_files": {
-          "$ref": "#/$defs/stringList",
+          "$ref": "#/$defs/stringListRule",
           "description": "Files that must exist in the repository."
         },
         "required_changed_files": {
-          "$ref": "#/$defs/stringList",
+          "$ref": "#/$defs/stringListRule",
           "description": "File paths or patterns that must each match at least one changed file."
         },
         "forbidden_files": {
-          "$ref": "#/$defs/stringList",
+          "$ref": "#/$defs/stringListRule",
           "description": "File paths or patterns that fail the check when changed."
         },
         "warn_files": {
-          "$ref": "#/$defs/stringList",
+          "$ref": "#/$defs/stringListRule",
           "description": "File paths or patterns that warn when changed without failing the check."
         },
         "warn_dependency_changes": {
-          "type": "boolean",
+          "$ref": "#/$defs/boolRule",
           "description": "Warn when common dependency manifests or lockfiles change."
         }
       }
     }
   },
   "$defs": {
+    "level": {
+      "type": "string",
+      "enum": ["warn", "fail"]
+    },
+    "intRule": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["value"],
+          "properties": {
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "level": {
+              "$ref": "#/$defs/level"
+            }
+          }
+        }
+      ]
+    },
+    "stringRule": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["value"],
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "level": {
+              "$ref": "#/$defs/level"
+            }
+          }
+        }
+      ]
+    },
+    "boolRule": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "level": {
+              "$ref": "#/$defs/level"
+            }
+          }
+        }
+      ]
+    },
+    "stringListRule": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/stringList"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["values"],
+          "properties": {
+            "values": {
+              "$ref": "#/$defs/stringList"
+            },
+            "level": {
+              "$ref": "#/$defs/level"
+            }
+          }
+        }
+      ]
+    },
+    "squashRule": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/level"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "level": {
+              "$ref": "#/$defs/level"
+            }
+          }
+        }
+      ]
+    },
     "stringList": {
       "type": "array",
       "items": {
