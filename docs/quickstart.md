@@ -86,6 +86,20 @@ Or use `--config` locally:
 go run github.com/harryvince/danger-go/cmd/danger-go@latest local --config .github/danger.yaml
 ```
 
+## Validate Configuration
+
+Validate your config against the bundled JSON Schema:
+
+```sh
+go run github.com/harryvince/danger-go/cmd/danger-go@latest validate
+```
+
+Validate a custom path:
+
+```sh
+go run github.com/harryvince/danger-go/cmd/danger-go@latest validate --config .github/danger.yaml
+```
+
 ## Version
 
 Print the installed version:

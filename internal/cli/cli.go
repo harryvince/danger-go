@@ -12,6 +12,7 @@ import (
 	"github.com/harryvince/danger-go/internal/git"
 	"github.com/harryvince/danger-go/internal/github"
 	"github.com/harryvince/danger-go/internal/version"
+	"github.com/harryvince/danger-go/schema"
 )
 
 const usage = `danger-go
@@ -19,11 +20,13 @@ const usage = `danger-go
 Usage:
   danger-go local [--config path]
   danger-go ci    [--config path]
+  danger-go validate [--config path]
   danger-go version
 
 Commands:
   local   Run checks against the local git working tree.
   ci      Run checks using GitHub Actions metadata when available.
+  validate Validate a danger-go config file against the JSON Schema.
   version Print the danger-go version.
 `
 
@@ -36,6 +39,8 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	switch args[0] {
 	case "local", "ci":
 		return runChecks(ctx, args[0], args[1:], stdout)
+	case "validate":
+		return runValidate(args[1:], stdout)
 	case "version":
 		fmt.Fprintln(stdout, version.Info())
 		return nil
@@ -45,6 +50,30 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", args[0], usage)
 	}
+}
+
+func runValidate(args []string, stdout io.Writer) error {
+	fs := flag.NewFlagSet("validate", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	configPath := fs.String("config", "", "path to .danger.yaml or .danger.yml")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+
+	path := *configPath
+	if path == "" {
+		var err error
+		path, err = config.FindPath()
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := schema.ValidateFile(path); err != nil {
+		return err
+	}
+	fmt.Fprintf(stdout, "Config is valid: %s\n", path)
+	return nil
 }
 
 func runChecks(ctx context.Context, mode string, args []string, stdout io.Writer) error {

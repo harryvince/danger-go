@@ -33,16 +33,24 @@ func Load(path string) (Config, string, error) {
 		return cfg, path, err
 	}
 
+	path, err := FindPath()
+	if err != nil {
+		return Config{}, "", err
+	}
+	cfg, err := loadPath(path)
+	return cfg, path, err
+}
+
+func FindPath() (string, error) {
 	for _, candidate := range defaultPaths {
 		if _, err := os.Stat(candidate); err == nil {
-			cfg, err := loadPath(candidate)
-			return cfg, candidate, err
+			return candidate, nil
 		} else if !errors.Is(err, os.ErrNotExist) {
-			return Config{}, "", err
+			return "", err
 		}
 	}
 
-	return Config{}, "", fmt.Errorf("no config found; create .danger.yaml or .danger.yml")
+	return "", fmt.Errorf("no config found; create .danger.yaml or .danger.yml")
 }
 
 func loadPath(path string) (Config, error) {
