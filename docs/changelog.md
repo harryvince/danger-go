@@ -24,6 +24,8 @@ When the release PR is merged, Release Please will:
 - create a GitHub release;
 - tag the release.
 
+After the GitHub release is published, the release artifacts workflow builds and uploads platform archives and `checksums.txt` to the release.
+
 Use Conventional Commits so changes appear in the right changelog section.
 
 ## Current Changelog

@@ -90,6 +90,8 @@ Print the CLI version:
 go run ./cmd/danger-go version
 ```
 
+Release binaries are attached to GitHub releases for Linux, macOS, and Windows on amd64 and arm64.
+
 ## Configuration
 
 ```yaml
