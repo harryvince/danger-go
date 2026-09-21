@@ -13,6 +13,15 @@ rules:
 
 This is useful for teams that prefer smaller, easier-to-review changes.
 
+## Large Line Diffs
+
+Fail pull requests that add or delete more than 500 lines:
+
+```yaml
+rules:
+  max_changed_lines: 500
+```
+
 ## Ticket-Based Titles
 
 Require a ticket key at the start of every pull request title:
@@ -49,6 +58,19 @@ rules:
 
 This checks the repository contents, not just the pull request diff.
 
+## Required Documentation Changes
+
+Require documentation to change with the pull request:
+
+```yaml
+rules:
+  required_changed_files:
+    - docs/**
+    - README.md
+```
+
+Each listed pattern must match at least one changed file.
+
 ## Forbidden Changed Files
 
 Fail when generated, local, or sensitive files are changed:
@@ -63,19 +85,44 @@ rules:
 
 Patterns use Go `filepath.Match` behavior. Exact path matches are also supported.
 
+## Warning-Only Files
+
+Warn when generated files change without failing the check:
+
+```yaml
+rules:
+  warn_files:
+    - generated/**
+```
+
+## Dependency Manifest Warnings
+
+Warn when common dependency manifests or lockfiles change:
+
+```yaml
+rules:
+  warn_dependency_changes: true
+```
+
 ## Combined Policy
 
 ```yaml
 rules:
   max_changed_files: 50
+  max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
   required_files:
     - README.md
     - go.mod
+  required_changed_files:
+    - docs/**
   forbidden_files:
     - "*.tmp"
     - ".env"
     - "secrets.json"
+  warn_files:
+    - generated/**
+  warn_dependency_changes: true
 ```
 
 ## Custom Config Location

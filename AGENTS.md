@@ -113,11 +113,17 @@ Supported settings live under `rules`:
 ```yaml
 rules:
   max_changed_files: 50
+  max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
   required_files:
     - go.mod
+  required_changed_files:
+    - docs/**
   forbidden_files:
     - "*.tmp"
+  warn_files:
+    - generated/**
+  warn_dependency_changes: true
 ```
 
 Implementation references:

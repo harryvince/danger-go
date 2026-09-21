@@ -7,11 +7,15 @@ Create `.danger.yaml` in your repository:
 ```yaml
 rules:
   max_changed_files: 50
+  max_changed_lines: 500
   require_pr_title_pattern: ".+"
   required_files:
     - go.mod
+  required_changed_files:
+    - README.md
   forbidden_files:
     - "*.tmp"
+  warn_dependency_changes: true
 ```
 
 `.danger.yml` is also supported.

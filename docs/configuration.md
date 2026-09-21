@@ -16,13 +16,19 @@ danger-go local --config .github/danger.yaml
 ```yaml
 rules:
   max_changed_files: 50
+  max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
   required_files:
     - go.mod
     - README.md
+  required_changed_files:
+    - docs/**
   forbidden_files:
     - "*.tmp"
     - "secrets.json"
+  warn_files:
+    - generated/**
+  warn_dependency_changes: true
 ```
 
 ## Top-Level Settings
@@ -42,6 +48,19 @@ Fails when the number of changed files is greater than the configured value.
 ```yaml
 rules:
   max_changed_files: 50
+```
+
+Set to `0` or omit the setting to disable this rule.
+
+### `max_changed_lines`
+
+Type: integer
+
+Fails when the number of added plus deleted lines is greater than the configured value.
+
+```yaml
+rules:
+  max_changed_lines: 500
 ```
 
 Set to `0` or omit the setting to disable this rule.
@@ -82,6 +101,21 @@ rules:
 
 This is useful for keeping baseline repository files present.
 
+### `required_changed_files`
+
+Type: list of strings
+
+Fails when no changed file matches a listed path or glob pattern.
+
+```yaml
+rules:
+  required_changed_files:
+    - docs/**
+    - README.md
+```
+
+This is useful for policies like requiring documentation updates. Each listed pattern must match at least one changed file.
+
 ### `forbidden_files`
 
 Type: list of strings
@@ -96,6 +130,42 @@ rules:
 ```
 
 Patterns use Go `filepath.Match` behavior. Exact path matches are also supported.
+
+### `warn_files`
+
+Type: list of strings
+
+Adds a warning when a changed file matches one of the configured paths or glob patterns.
+
+```yaml
+rules:
+  warn_files:
+    - generated/**
+    - "*.lock"
+```
+
+Warnings are reported in the PR comment but do not fail the check.
+
+### `warn_dependency_changes`
+
+Type: boolean
+
+Adds a warning when common dependency manifests or lockfiles change.
+
+```yaml
+rules:
+  warn_dependency_changes: true
+```
+
+Currently watched files include common Go, Node, Ruby, Rust, and Python dependency files such as `go.mod`, `package.json`, `Gemfile.lock`, `Cargo.lock`, and `requirements.txt`.
+
+## Path Patterns
+
+Rules that accept file patterns support:
+
+- exact paths like `README.md`;
+- standard glob patterns like `*.tmp`;
+- directory-prefix patterns ending in `/**`, such as `docs/**`.
 
 ## Exit Codes
 
