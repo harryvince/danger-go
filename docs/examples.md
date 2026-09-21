@@ -51,6 +51,36 @@ Add checkout validation
 JIRA-123 add checkout validation
 ```
 
+## Linked Issue Keys
+
+Require an issue key somewhere in the pull request title, body, or branch name:
+
+```yaml
+rules:
+  require_linked_issue_pattern: "JIRA-[0-9]+"
+```
+
+Matching examples:
+
+```text
+JIRA-123: update workflow
+Closes JIRA-123
+feature/JIRA-123-workflow
+```
+
+## Required Labels
+
+Require pull request labels:
+
+```yaml
+rules:
+  required_labels:
+    - ready
+    - area/docs
+```
+
+Label matching is case-insensitive.
+
 ## Required Repository Files
 
 Require baseline files to exist:
@@ -117,6 +147,9 @@ rules:
   max_changed_files: 50
   max_changed_lines: 500
   require_pr_title_pattern: "^JIRA-[0-9]+: .+"
+  require_linked_issue_pattern: "JIRA-[0-9]+"
+  required_labels:
+    - ready
   required_files:
     - README.md
     - go.mod

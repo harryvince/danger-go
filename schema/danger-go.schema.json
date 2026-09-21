@@ -29,6 +29,14 @@
           "type": "string",
           "description": "Go regular expression that the pull request title must match."
         },
+        "require_linked_issue_pattern": {
+          "type": "string",
+          "description": "Go regular expression that must match the pull request title, body, or branch name."
+        },
+        "required_labels": {
+          "$ref": "#/$defs/stringList",
+          "description": "Pull request labels that must be present."
+        },
         "required_files": {
           "$ref": "#/$defs/stringList",
           "description": "Files that must exist in the repository."

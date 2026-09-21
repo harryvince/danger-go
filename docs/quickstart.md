@@ -10,6 +10,9 @@ rules:
   max_changed_files: 50
   max_changed_lines: 500
   require_pr_title_pattern: ".+"
+  require_linked_issue_pattern: "JIRA-[0-9]+"
+  required_labels:
+    - ready
   required_files:
     - go.mod
   required_changed_files:

@@ -17,11 +17,14 @@ type FileChange struct {
 }
 
 type Repository struct {
-	Files            []string
-	ModifiedFiles    []string
-	UntrackedFiles   []string
-	FileChanges      []FileChange
-	PullRequestTitle string
+	Files             []string
+	ModifiedFiles     []string
+	UntrackedFiles    []string
+	FileChanges       []FileChange
+	PullRequestTitle  string
+	PullRequestBody   string
+	PullRequestBranch string
+	PullRequestLabels []string
 }
 
 func Inspect(ctx context.Context, dir string) (Repository, error) {
@@ -46,11 +49,14 @@ func Inspect(ctx context.Context, dir string) (Repository, error) {
 	}
 
 	return Repository{
-		Files:            files,
-		ModifiedFiles:    modified,
-		UntrackedFiles:   untracked,
-		FileChanges:      fileChanges,
-		PullRequestTitle: os.Getenv("DANGER_PR_TITLE"),
+		Files:             files,
+		ModifiedFiles:     modified,
+		UntrackedFiles:    untracked,
+		FileChanges:       fileChanges,
+		PullRequestTitle:  os.Getenv("DANGER_PR_TITLE"),
+		PullRequestBody:   os.Getenv("DANGER_PR_BODY"),
+		PullRequestBranch: os.Getenv("DANGER_PR_BRANCH"),
+		PullRequestLabels: splitEnvList(os.Getenv("DANGER_PR_LABELS")),
 	}, nil
 }
 
@@ -148,6 +154,21 @@ func parseNumstat(value string) int {
 		return 0
 	}
 	return n
+}
+
+func splitEnvList(value string) []string {
+	if value == "" {
+		return nil
+	}
+	parts := strings.Split(value, ",")
+	var values []string
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			values = append(values, part)
+		}
+	}
+	return values
 }
 
 func gitLines(ctx context.Context, dir string, args ...string) ([]string, error) {

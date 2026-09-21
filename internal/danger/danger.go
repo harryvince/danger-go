@@ -73,6 +73,22 @@ func Evaluate(cfg config.Config, repo git.Repository) Report {
 		}
 	}
 
+	if cfg.Rules.RequireLinkedIssuePattern != "" {
+		text := strings.Join([]string{repo.PullRequestTitle, repo.PullRequestBody, repo.PullRequestBranch}, "\n")
+		matched, err := regexp.MatchString(cfg.Rules.RequireLinkedIssuePattern, text)
+		if err != nil {
+			report.fail(fmt.Sprintf("invalid require_linked_issue_pattern: %s", err))
+		} else if !matched {
+			report.fail(fmt.Sprintf("PR title, body, or branch does not match linked issue pattern %q", cfg.Rules.RequireLinkedIssuePattern))
+		}
+	}
+
+	for _, label := range cfg.Rules.RequiredLabels {
+		if !hasLabel(repo.PullRequestLabels, label) {
+			report.fail(fmt.Sprintf("required label is missing: %s", label))
+		}
+	}
+
 	for _, required := range cfg.Rules.RequiredFiles {
 		if !repo.HasFile(required) {
 			report.fail(fmt.Sprintf("required file is missing: %s", required))
@@ -132,6 +148,15 @@ func hasChangedFile(changedFiles []string, pattern string) bool {
 func matchesAny(patterns []string, changed string) bool {
 	for _, pattern := range patterns {
 		if matchedPath(pattern, changed) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasLabel(labels []string, required string) bool {
+	for _, label := range labels {
+		if strings.EqualFold(label, required) {
 			return true
 		}
 	}

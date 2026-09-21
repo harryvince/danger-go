@@ -28,12 +28,22 @@ type PullRequestContext struct {
 	Repo   string
 	Number int
 	Title  string
+	Body   string
+	Branch string
+	Labels []string
 }
 
 type actionsEvent struct {
 	PullRequest struct {
 		Number int    `json:"number"`
 		Title  string `json:"title"`
+		Body   string `json:"body"`
+		Head   struct {
+			Ref string `json:"ref"`
+		} `json:"head"`
+		Labels []struct {
+			Name string `json:"name"`
+		} `json:"labels"`
 	} `json:"pull_request"`
 	Repository struct {
 		Name  string `json:"name"`
@@ -99,6 +109,9 @@ func ContextFromActions() (*PullRequestContext, error) {
 		Repo:   event.Repository.Name,
 		Number: event.PullRequest.Number,
 		Title:  event.PullRequest.Title,
+		Body:   event.PullRequest.Body,
+		Branch: event.PullRequest.Head.Ref,
+		Labels: eventLabels(event),
 	}, nil
 }
 
@@ -109,10 +122,23 @@ func (c *Client) Repository(ctx context.Context, pr PullRequestContext) (git.Rep
 	}
 
 	return git.Repository{
-		ModifiedFiles:    changePaths(files),
-		FileChanges:      fileChanges(files),
-		PullRequestTitle: pr.Title,
+		ModifiedFiles:     changePaths(files),
+		FileChanges:       fileChanges(files),
+		PullRequestTitle:  pr.Title,
+		PullRequestBody:   pr.Body,
+		PullRequestBranch: pr.Branch,
+		PullRequestLabels: pr.Labels,
 	}, nil
+}
+
+func eventLabels(event actionsEvent) []string {
+	labels := make([]string, 0, len(event.PullRequest.Labels))
+	for _, label := range event.PullRequest.Labels {
+		if label.Name != "" {
+			labels = append(labels, label.Name)
+		}
+	}
+	return labels
 }
 
 func (c *Client) PostReportComment(ctx context.Context, pr PullRequestContext, report danger.Report) error {
