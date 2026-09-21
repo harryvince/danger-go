@@ -88,5 +88,5 @@ The action:
 3. Runs `danger-go ci`.
 4. Reads GitHub Actions pull request metadata.
 5. Evaluates rules from the config file.
-6. Posts a summary comment when GitHub allows it.
+6. Creates or updates a summary comment when GitHub allows it.
 7. Fails the workflow if any rule fails.

@@ -15,10 +15,12 @@ import (
 )
 
 const apiBase = "https://api.github.com"
+const commentMarker = "<!-- danger-go:report -->"
 
 type Client struct {
 	token      string
 	httpClient *http.Client
+	apiBase    string
 }
 
 type PullRequestContext struct {
@@ -45,10 +47,19 @@ type fileResponse struct {
 	Filename string `json:"filename"`
 }
 
+type commentResponse struct {
+	ID   int64  `json:"id"`
+	Body string `json:"body"`
+	User struct {
+		Type string `json:"type"`
+	} `json:"user"`
+}
+
 func NewClientFromEnv() *Client {
 	return &Client{
 		token:      firstNonEmpty(os.Getenv("GITHUB_TOKEN"), os.Getenv("GH_TOKEN")),
 		httpClient: http.DefaultClient,
+		apiBase:    apiBase,
 	}
 }
 
@@ -108,8 +119,19 @@ func (c *Client) PostReportComment(ctx context.Context, pr PullRequestContext, r
 		return err
 	}
 
+	existing, err := c.findReportComment(ctx, pr)
+	if err != nil {
+		return err
+	}
+
+	method := http.MethodPost
 	path := fmt.Sprintf("/repos/%s/%s/issues/%d/comments", pr.Owner, pr.Repo, pr.Number)
-	req, err := c.request(ctx, http.MethodPost, path, bytes.NewReader(payload))
+	if existing != nil {
+		method = http.MethodPatch
+		path = fmt.Sprintf("/repos/%s/%s/issues/comments/%d", pr.Owner, pr.Repo, existing.ID)
+	}
+
+	req, err := c.request(ctx, method, path, bytes.NewReader(payload))
 	if err != nil {
 		return err
 	}
@@ -126,6 +148,36 @@ func (c *Client) PostReportComment(ctx context.Context, pr PullRequestContext, r
 		return fmt.Errorf("posting GitHub comment failed: %s: %s", resp.Status, strings.TrimSpace(string(body)))
 	}
 	return nil
+}
+
+func (c *Client) findReportComment(ctx context.Context, pr PullRequestContext) (*commentResponse, error) {
+	for page := 1; ; page++ {
+		path := fmt.Sprintf("/repos/%s/%s/issues/%d/comments?per_page=100&page=%d", pr.Owner, pr.Repo, pr.Number, page)
+		req, err := c.request(ctx, http.MethodGet, path, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		var comments []commentResponse
+		if err := decodeResponse(resp, &comments); err != nil {
+			return nil, err
+		}
+
+		for _, comment := range comments {
+			if strings.Contains(comment.Body, commentMarker) && comment.User.Type == "Bot" {
+				return &comment, nil
+			}
+		}
+
+		if len(comments) < 100 {
+			return nil, nil
+		}
+	}
 }
 
 func (c *Client) changedFiles(ctx context.Context, pr PullRequestContext) ([]string, error) {
@@ -161,7 +213,11 @@ func (c *Client) changedFiles(ctx context.Context, pr PullRequestContext) ([]str
 }
 
 func (c *Client) request(ctx context.Context, method, path string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequestWithContext(ctx, method, apiBase+path, body)
+	base := c.apiBase
+	if base == "" {
+		base = apiBase
+	}
+	req, err := http.NewRequestWithContext(ctx, method, base+path, body)
 	if err != nil {
 		return nil, err
 	}
@@ -184,6 +240,8 @@ func decodeResponse(resp *http.Response, target any) error {
 
 func renderComment(report danger.Report) string {
 	var b strings.Builder
+	b.WriteString(commentMarker)
+	b.WriteString("\n")
 	b.WriteString("## danger-go\n\n")
 	if len(report.Messages) == 0 {
 		b.WriteString("No issues found.\n")

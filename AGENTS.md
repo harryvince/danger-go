@@ -285,11 +285,11 @@ Current `ci` behavior:
 - Fetch changed files from the GitHub API.
 - Merge local repository file information where available for file-existence rules.
 - Evaluate rules.
-- Attempt to post a PR comment.
+- Attempt to create or update a PR comment.
 - Comment posting errors are printed but do not fail the check.
 - Rule failures do fail the check.
 
-The comment behavior currently creates a new comment. A likely improvement is updating an existing `danger-go` comment instead.
+The comment behavior uses a hidden marker to update an existing `danger-go` bot comment when one is present.
 
 ## History Notes
 
