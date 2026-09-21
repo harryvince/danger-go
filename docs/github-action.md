@@ -49,11 +49,11 @@ Why these permissions are needed:
 
 - `contents: read` allows repository checkout and inspection.
 - `pull-requests: write` allows pull request operations.
-- `issues: write` allows pull request comments, because GitHub exposes PR comments through the Issues comments API.
+- `issues: write` allows pull request comments and status labels, because GitHub exposes PR comments and labels through the Issues API.
 
 Use `github-token` only when you intentionally want a different credential, such as a GitHub App token.
 
-For pull requests from forks, GitHub may restrict the automatic token. In that case, `danger-go` can still run checks, but comment posting may be skipped or denied by GitHub.
+For pull requests from forks, GitHub may restrict the automatic token. In that case, `danger-go` can still run checks, but comment posting or status labels may be skipped or denied by GitHub.
 
 ## Custom Config
 
@@ -89,4 +89,5 @@ The action:
 4. Reads GitHub Actions pull request metadata.
 5. Evaluates rules from the config file.
 6. Creates or updates a summary comment when GitHub allows it.
-7. Fails the workflow if any rule fails.
+7. Applies one status label by default: `danger::passed`, `danger::warn`, or `danger::fail`.
+8. Fails the workflow if any rule fails.

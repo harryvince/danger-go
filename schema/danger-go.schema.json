@@ -14,6 +14,10 @@
       "$ref": "#/$defs/level",
       "description": "Default level for configured rules. Individual rules can override this."
     },
+    "labels": {
+      "$ref": "#/$defs/labelsConfig",
+      "description": "Controls automatic pull request status labels. Enabled by default."
+    },
     "rules": {
       "type": "object",
       "description": "Rule configuration.",
@@ -81,6 +85,22 @@
     "level": {
       "type": "string",
       "enum": ["warn", "fail"]
+    },
+    "labelsConfig": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
     },
     "intRule": {
       "oneOf": [

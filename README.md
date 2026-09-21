@@ -49,7 +49,7 @@ jobs:
 
 Then add `.danger.yaml` or `.danger.yml` to the repository.
 
-The action checks out the repository, installs Go, runs `danger-go ci`, reads pull request metadata, evaluates the configured rules, and creates or updates a pull request comment when permissions allow it.
+The action checks out the repository, installs Go, runs `danger-go ci`, reads pull request metadata, evaluates the configured rules, creates or updates a pull request comment, and applies a `danger::passed`, `danger::warn`, or `danger::fail` status label when permissions allow it.
 
 ### Action Inputs
 
@@ -72,11 +72,13 @@ permissions:
   issues: write
 ```
 
-`contents: read` lets the action check out and inspect the repository. `pull-requests: write` allows pull request operations. `issues: write` is needed because GitHub pull request comments use the Issues comments API.
+`contents: read` lets the action check out and inspect the repository. `pull-requests: write` allows pull request operations. `issues: write` is needed because GitHub pull request comments and labels use the Issues API.
 
 Pass `github-token` only if you have a specific reason to use a different token, such as a GitHub App token or a repository policy that prevents the automatic token from doing what you need.
 
 For pull requests from forks, GitHub may restrict `GITHUB_TOKEN` permissions.
+
+Automatic status labels are enabled by default. Disable them in `.danger.yaml` with `labels: false` or `labels: { enabled: false }`.
 
 ## Local Usage
 
@@ -107,7 +109,7 @@ rules:
   max_changed_files: 50
   max_changed_lines: 500
   require_pr_title_pattern: ".+"
-  require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_linked_issue_pattern: "ISSUE-[0-9]+"
   require_conventional_commits: true
   require_squashed_commits:
     enabled: true

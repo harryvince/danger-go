@@ -11,7 +11,7 @@ rules:
   max_changed_files: 50
   max_changed_lines: 500
   require_pr_title_pattern: ".+"
-  require_linked_issue_pattern: "JIRA-[0-9]+"
+  require_linked_issue_pattern: "ISSUE-[0-9]+"
   require_conventional_commits: true
   require_squashed_commits:
     enabled: true
@@ -72,7 +72,7 @@ go run github.com/harryvince/danger-go/cmd/danger-go@latest local
 Local mode inspects the current Git repository. If your config validates pull request titles, set `DANGER_PR_TITLE`:
 
 ```sh
-DANGER_PR_TITLE="JIRA-123: update billing flow" go run github.com/harryvince/danger-go/cmd/danger-go@latest local
+DANGER_PR_TITLE="ISSUE-123: update billing flow" go run github.com/harryvince/danger-go/cmd/danger-go@latest local
 ```
 
 ## Custom Config Path

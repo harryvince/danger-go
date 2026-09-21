@@ -27,7 +27,7 @@ rules:
     value: 10
     level: fail
   require_pr_title_pattern:
-    value: "^JIRA-[0-9]+: .+"
+    value: "^ISSUE-[0-9]+: .+"
     level: warn
   required_labels:
     values:

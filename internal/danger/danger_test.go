@@ -12,8 +12,8 @@ func TestEvaluateReportsFailures(t *testing.T) {
 		Rules: config.Rules{
 			MaxChangedFiles:           config.IntRule{Value: 1},
 			MaxChangedLines:           config.IntRule{Value: 5},
-			RequirePRTitlePattern:     config.StringRule{Value: "^JIRA-\\d+: .+"},
-			RequireLinkedIssuePattern: config.StringRule{Value: "JIRA-\\d+"},
+			RequirePRTitlePattern:     config.StringRule{Value: "^ISSUE-\\d+: .+"},
+			RequireLinkedIssuePattern: config.StringRule{Value: "ISSUE-\\d+"},
 			RequiredLabels:            config.StringListRule{Values: []string{"ready"}},
 			RequiredFiles:             config.StringListRule{Values: []string{"README.md"}},
 			RequiredChangedFiles:      config.StringListRule{Values: []string{"docs/**"}},
@@ -37,12 +37,12 @@ func TestEvaluateReportsFailures(t *testing.T) {
 func TestEvaluatePassesLabelAndLinkedIssueRules(t *testing.T) {
 	report := Evaluate(config.Config{
 		Rules: config.Rules{
-			RequireLinkedIssuePattern: config.StringRule{Value: "JIRA-\\d+"},
+			RequireLinkedIssuePattern: config.StringRule{Value: "ISSUE-\\d+"},
 			RequiredLabels:            config.StringListRule{Values: []string{"ready"}},
 		},
 	}, git.Repository{
 		PullRequestTitle:  "Update workflow",
-		PullRequestBody:   "Closes JIRA-123",
+		PullRequestBody:   "Closes ISSUE-123",
 		PullRequestLabels: []string{"Ready"},
 	})
 
@@ -85,7 +85,7 @@ func TestEvaluateRequiresConventionalCommits(t *testing.T) {
 	}, git.Repository{
 		Commits: []git.Commit{
 			{Subject: "feat: add checkout validation"},
-			{Subject: "JIRA-123: add checkout validation"},
+			{Subject: "ISSUE-123: add checkout validation"},
 		},
 	})
 

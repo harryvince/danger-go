@@ -11,9 +11,10 @@ import (
 var defaultPaths = []string{".danger.yaml", ".danger.yml"}
 
 type Config struct {
-	Level   string   `yaml:"level"`
-	Rules   Rules    `yaml:"rules"`
-	Plugins []Plugin `yaml:"plugins"`
+	Level   string       `yaml:"level"`
+	Labels  LabelsConfig `yaml:"labels"`
+	Rules   Rules        `yaml:"rules"`
+	Plugins []Plugin     `yaml:"plugins"`
 }
 
 type Rules struct {
@@ -54,6 +55,10 @@ type StringListRule struct {
 type SquashRule struct {
 	Enabled bool
 	Level   string
+}
+
+type LabelsConfig struct {
+	Enabled *bool
 }
 
 type Plugin struct {
@@ -144,6 +149,33 @@ func (r *StringListRule) UnmarshalYAML(value *yaml.Node) error {
 	default:
 		return fmt.Errorf("expected string list or rule object")
 	}
+}
+
+func (l *LabelsConfig) UnmarshalYAML(value *yaml.Node) error {
+	switch value.Kind {
+	case yaml.ScalarNode:
+		var enabled bool
+		if err := value.Decode(&enabled); err != nil {
+			return err
+		}
+		l.Enabled = &enabled
+		return nil
+	case yaml.MappingNode:
+		var raw struct {
+			Enabled *bool `yaml:"enabled"`
+		}
+		if err := value.Decode(&raw); err != nil {
+			return err
+		}
+		l.Enabled = raw.Enabled
+		return nil
+	default:
+		return fmt.Errorf("expected boolean or labels object")
+	}
+}
+
+func (l LabelsConfig) IsEnabled() bool {
+	return l.Enabled == nil || *l.Enabled
 }
 
 func (c *Command) UnmarshalYAML(value *yaml.Node) error {

@@ -15,10 +15,10 @@ import (
 
 func TestRunPassesRepoAndConfigToPlugin(t *testing.T) {
 	pluginPath := writeScript(t, `#!/bin/sh
-python3 -c 'import json,sys; req=json.load(sys.stdin); assert req["protocol_version"] == "v1"; assert req["repo"]["pull_request"]["title"] == "JIRA-123: test"; assert req["config"]["owner"] == "platform"; print(json.dumps({"messages":[{"level":"warn","text":"custom warning"}]}))'
+python3 -c 'import json,sys; req=json.load(sys.stdin); assert req["protocol_version"] == "v1"; assert req["repo"]["pull_request"]["title"] == "ISSUE-123: test"; assert req["config"]["owner"] == "platform"; print(json.dumps({"messages":[{"level":"warn","text":"custom warning"}]}))'
 `)
 
-	report := Run(context.Background(), config.Plugin{Name: "custom", Command: []string{pluginPath}, Config: map[string]any{"owner": "platform"}}, git.Repository{PullRequestTitle: "JIRA-123: test"}, "")
+	report := Run(context.Background(), config.Plugin{Name: "custom", Command: []string{pluginPath}, Config: map[string]any{"owner": "platform"}}, git.Repository{PullRequestTitle: "ISSUE-123: test"}, "")
 
 	if report.HasFailures() {
 		t.Fatalf("expected warning-only report, got %#v", report.Messages)

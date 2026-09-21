@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -16,6 +17,20 @@ import (
 
 const apiBase = "https://api.github.com"
 const commentMarker = "<!-- danger-go:report -->"
+
+const (
+	LabelPassed = "danger::passed"
+	LabelWarn   = "danger::warn"
+	LabelFail   = "danger::fail"
+)
+
+var statusLabels = []string{LabelPassed, LabelWarn, LabelFail}
+
+var statusLabelColors = map[string]string{
+	LabelPassed: "2da44e",
+	LabelWarn:   "bf8700",
+	LabelFail:   "cf222e",
+}
 
 type Client struct {
 	token      string
@@ -154,6 +169,24 @@ func eventLabels(event actionsEvent) []string {
 	return labels
 }
 
+func (c *Client) SyncReportLabel(ctx context.Context, pr PullRequestContext, report danger.Report) error {
+	target := reportLabel(report)
+	if err := c.ensureLabel(ctx, pr, target); err != nil {
+		return err
+	}
+
+	for _, label := range statusLabels {
+		if label == target {
+			continue
+		}
+		if err := c.removeIssueLabel(ctx, pr, label); err != nil {
+			return err
+		}
+	}
+
+	return c.addIssueLabel(ctx, pr, target)
+}
+
 func (c *Client) PostReportComment(ctx context.Context, pr PullRequestContext, report danger.Report) error {
 	body := renderComment(report)
 	payload, err := json.Marshal(map[string]string{"body": body})
@@ -190,6 +223,96 @@ func (c *Client) PostReportComment(ctx context.Context, pr PullRequestContext, r
 		return fmt.Errorf("posting GitHub comment failed: %s: %s", resp.Status, strings.TrimSpace(string(body)))
 	}
 	return nil
+}
+
+func (c *Client) ensureLabel(ctx context.Context, pr PullRequestContext, label string) error {
+	payload, err := json.Marshal(map[string]string{
+		"name":        label,
+		"color":       statusLabelColors[label],
+		"description": "danger-go status",
+	})
+	if err != nil {
+		return err
+	}
+
+	req, err := c.request(ctx, http.MethodPost, fmt.Sprintf("/repos/%s/%s/labels", pr.Owner, pr.Repo), bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusUnprocessableEntity {
+		return nil
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("creating GitHub label failed: %s: %s", resp.Status, strings.TrimSpace(string(body)))
+	}
+	return nil
+}
+
+func (c *Client) addIssueLabel(ctx context.Context, pr PullRequestContext, label string) error {
+	payload, err := json.Marshal(map[string][]string{"labels": []string{label}})
+	if err != nil {
+		return err
+	}
+
+	req, err := c.request(ctx, http.MethodPost, fmt.Sprintf("/repos/%s/%s/issues/%d/labels", pr.Owner, pr.Repo, pr.Number), bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("adding GitHub label failed: %s: %s", resp.Status, strings.TrimSpace(string(body)))
+	}
+	return nil
+}
+
+func (c *Client) removeIssueLabel(ctx context.Context, pr PullRequestContext, label string) error {
+	path := fmt.Sprintf("/repos/%s/%s/issues/%d/labels/%s", pr.Owner, pr.Repo, pr.Number, url.PathEscape(label))
+	req, err := c.request(ctx, http.MethodDelete, path, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("removing GitHub label failed: %s: %s", resp.Status, strings.TrimSpace(string(body)))
+	}
+	return nil
+}
+
+func reportLabel(report danger.Report) string {
+	if report.HasFailures() {
+		return LabelFail
+	}
+	if report.HasWarnings() {
+		return LabelWarn
+	}
+	return LabelPassed
 }
 
 func (c *Client) findReportComment(ctx context.Context, pr PullRequestContext) (*commentResponse, error) {

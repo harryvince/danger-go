@@ -126,6 +126,11 @@ func runChecks(ctx context.Context, mode string, args []string, stdout io.Writer
 		if err := gh.PostReportComment(ctx, *pr, report); err != nil {
 			fmt.Fprintf(stdout, "Skipping GitHub comment: %s\n", err)
 		}
+		if cfg.Labels.IsEnabled() {
+			if err := gh.SyncReportLabel(ctx, *pr, report); err != nil {
+				fmt.Fprintf(stdout, "Skipping GitHub labels: %s\n", err)
+			}
+		}
 	}
 
 	if report.HasFailures() {

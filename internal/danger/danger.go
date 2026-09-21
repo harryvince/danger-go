@@ -53,6 +53,15 @@ func (r Report) HasFailures() bool {
 	return false
 }
 
+func (r Report) HasWarnings() bool {
+	for _, message := range r.Messages {
+		if message.Level == LevelWarn {
+			return true
+		}
+	}
+	return false
+}
+
 func Evaluate(cfg config.Config, repo git.Repository) Report {
 	var report Report
 
