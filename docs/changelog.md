@@ -1,12 +1,17 @@
 # Changelog
 
-`danger-go` uses Release Please to generate changelogs from Conventional Commits.
+`danger-go` uses Google's Release Please project to generate changelogs from Conventional Commits.
 
-The changelog will be published in `CHANGELOG.md` after the first Release Please release PR is merged.
+The canonical changelog is maintained in [`CHANGELOG.md`](https://github.com/harryvince/danger-go/blob/main/CHANGELOG.md).
 
-Until then, release preparation is tracked in the open Release Please PR:
+Latest release:
 
-https://github.com/harryvince/danger-go/pull/3
+- [danger-go v1.0.0](https://github.com/harryvince/danger-go/releases/tag/danger-go-v1.0.0)
+
+Release automation:
+
+- [googleapis/release-please](https://github.com/googleapis/release-please)
+- [googleapis/release-please-action](https://github.com/googleapis/release-please-action)
 
 ## How Releases Work
 
@@ -20,3 +25,7 @@ When the release PR is merged, Release Please will:
 - tag the release.
 
 Use Conventional Commits so changes appear in the right changelog section.
+
+## Current Changelog
+
+See [`CHANGELOG.md`](https://github.com/harryvince/danger-go/blob/main/CHANGELOG.md) for the current generated changelog.
