@@ -5,6 +5,7 @@
 Create `.danger.yaml` in your repository:
 
 ```yaml
+$schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 rules:
   max_changed_files: 50
   max_changed_lines: 500

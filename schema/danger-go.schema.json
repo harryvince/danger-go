@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harryvince.github.io/danger-go/schema/danger-go.schema.json",
+  "title": "danger-go configuration",
+  "description": "Configuration schema for .danger.yaml and .danger.yml files.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional JSON Schema URI used by editors and YAML language servers."
+    },
+    "rules": {
+      "type": "object",
+      "description": "Rule configuration.",
+      "additionalProperties": false,
+      "properties": {
+        "max_changed_files": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Fail when the number of changed files is greater than this value. Set to 0 or omit to disable."
+        },
+        "max_changed_lines": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Fail when added plus deleted lines are greater than this value. Set to 0 or omit to disable."
+        },
+        "require_pr_title_pattern": {
+          "type": "string",
+          "description": "Go regular expression that the pull request title must match."
+        },
+        "required_files": {
+          "$ref": "#/$defs/stringList",
+          "description": "Files that must exist in the repository."
+        },
+        "required_changed_files": {
+          "$ref": "#/$defs/stringList",
+          "description": "File paths or patterns that must each match at least one changed file."
+        },
+        "forbidden_files": {
+          "$ref": "#/$defs/stringList",
+          "description": "File paths or patterns that fail the check when changed."
+        },
+        "warn_files": {
+          "$ref": "#/$defs/stringList",
+          "description": "File paths or patterns that warn when changed without failing the check."
+        },
+        "warn_dependency_changes": {
+          "type": "boolean",
+          "description": "Warn when common dependency manifests or lockfiles change."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  }
+}

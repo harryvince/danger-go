@@ -83,6 +83,12 @@ DANGER_PR_TITLE="JIRA-123: local check" go run ./cmd/danger-go local --config .d
 
 The sample config requires a non-empty PR title, so set `DANGER_PR_TITLE` for local smoke tests.
 
+Validate the sample config against the JSON Schema:
+
+```sh
+mise run schema:check
+```
+
 Build docs:
 
 ```sh
@@ -108,9 +114,16 @@ Config files:
 - `.danger.yaml`
 - `.danger.yml`
 
+The JSON Schema for config linting is `schema/danger-go.schema.json`. Update it whenever config settings change. The schema is published with the docs at:
+
+```text
+https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+```
+
 Supported settings live under `rules`:
 
 ```yaml
+$schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 rules:
   max_changed_files: 50
   max_changed_lines: 500
@@ -279,8 +292,11 @@ Zensical/mise files:
 - `uv.lock`
 - `zensical.toml`
 - `.github/workflows/docs.yml`
+- `scripts/build-docs.sh`
 
 The docs workflow publishes the generated `site` directory to GitHub Pages using GitHub Actions. If Pages deployment fails with a Pages setup error, confirm the repository Pages source is set to GitHub Actions.
+
+`scripts/build-docs.sh` runs Zensical and copies `schema/danger-go.schema.json` into `site/schema/` so the public schema URL stays available.
 
 ## Release Artifacts
 

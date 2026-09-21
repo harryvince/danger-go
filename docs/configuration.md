@@ -11,6 +11,32 @@ You can also pass an explicit path:
 danger-go local --config .github/danger.yaml
 ```
 
+## JSON Schema
+
+`danger-go` publishes a JSON Schema for editor validation and CI linting:
+
+```text
+https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+```
+
+YAML schema plugins generally consume JSON Schema, so this schema can validate `.danger.yaml` and `.danger.yml` files.
+
+Add `$schema` to a config file for editor support:
+
+```yaml
+$schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
+rules:
+  max_changed_files: 50
+```
+
+Or configure your editor/YAML language server to associate the schema with `.danger.yaml` and `.danger.yml`.
+
+This repository validates its sample config with:
+
+```sh
+mise run schema:check
+```
+
 ## Full Example
 
 ```yaml
