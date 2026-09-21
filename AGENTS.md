@@ -254,6 +254,7 @@ Current docs:
 - `docs/quickstart.md`
 - `docs/configuration.md`
 - `docs/github-action.md`
+- `docs/examples.md`
 - `docs/changelog.md`
 - `docs/roadmap.md`
 

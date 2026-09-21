@@ -19,6 +19,7 @@ Key pages:
 - [Quickstart](https://harryvince.github.io/danger-go/quickstart/)
 - [GitHub Action](https://harryvince.github.io/danger-go/github-action/)
 - [Configuration](https://harryvince.github.io/danger-go/configuration/)
+- [Examples](https://harryvince.github.io/danger-go/examples/)
 - [Changelog and Releases](https://harryvince.github.io/danger-go/changelog/)
 - [Roadmap](https://harryvince.github.io/danger-go/roadmap/)
 
