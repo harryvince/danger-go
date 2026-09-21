@@ -85,3 +85,15 @@ Print the installed version:
 ```sh
 go run github.com/harryvince/danger-go/cmd/danger-go@latest version
 ```
+
+## Release Binaries
+
+GitHub releases include archived binaries for:
+
+- Linux amd64 and arm64
+- macOS amd64 and arm64
+- Windows amd64 and arm64
+
+Download them from the latest release:
+
+https://github.com/harryvince/danger-go/releases/latest

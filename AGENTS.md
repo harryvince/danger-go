@@ -95,6 +95,12 @@ Preview docs locally:
 mise run docs:serve
 ```
 
+Build release archives locally:
+
+```sh
+mise run release:build
+```
+
 ## Current Configuration Schema
 
 Config files:
@@ -269,6 +275,23 @@ Zensical/mise files:
 - `.github/workflows/docs.yml`
 
 The docs workflow publishes the generated `site` directory to GitHub Pages using GitHub Actions. If Pages deployment fails with a Pages setup error, confirm the repository Pages source is set to GitHub Actions.
+
+## Release Artifacts
+
+Release binaries are built by `.github/workflows/release-artifacts.yml` when a GitHub release is published. The workflow runs `scripts/build-release-artifacts.sh`, then uploads `dist/*` to the release.
+
+The script builds these targets:
+
+- `linux/amd64`
+- `linux/arm64`
+- `darwin/amd64`
+- `darwin/arm64`
+- `windows/amd64`
+- `windows/arm64`
+
+Archives include the `danger-go` binary, `README.md`, and `CHANGELOG.md`. The workflow also uploads `checksums.txt`.
+
+The script sets version metadata with Go ldflags. Keep `internal/version` variable names stable unless you update the script too.
 
 ## Implementation Notes
 

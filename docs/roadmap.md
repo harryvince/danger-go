@@ -5,7 +5,6 @@
 ## Near-Term
 
 - Add more built-in rules.
-- Add a release artifact for users who prefer a binary instead of `go run`.
 
 ## Possible Rule Ideas
 
