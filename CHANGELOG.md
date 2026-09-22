@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/harryvince/danger-go/compare/danger-go-v1.4.0...danger-go-v1.5.0) (2026-09-22)
+
+
+### Features
+
+* require signed-off commits ([feca0cf](https://github.com/harryvince/danger-go/commit/feca0cfda91a355d63c0e9668531cdea6ecac2ef))
+
 ## [1.4.0](https://github.com/harryvince/danger-go/compare/danger-go-v1.3.0...danger-go-v1.4.0) (2026-09-21)
 
 
