@@ -39,6 +39,10 @@
           "$ref": "#/$defs/boolRule",
           "description": "Fail when any pull request commit subject is not a Conventional Commit."
         },
+        "require_signed_off_commits": {
+          "$ref": "#/$defs/boolRule",
+          "description": "Fail when any pull request commit is missing a Signed-off-by trailer."
+        },
         "require_squashed_commits": {
           "$ref": "#/$defs/squashRule",
           "description": "Warn or fail when a pull request has more than one commit."

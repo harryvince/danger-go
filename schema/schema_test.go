@@ -8,6 +8,7 @@ $schema: https://harryvince.github.io/danger-go/schema/danger-go.schema.json
 rules:
   max_changed_files: 10
   require_conventional_commits: true
+  require_signed_off_commits: true
   require_squashed_commits: warn
   required_labels:
     - ready

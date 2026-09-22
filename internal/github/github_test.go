@@ -100,7 +100,7 @@ func TestRepositoryReadsChangedFilesAndCommits(t *testing.T) {
 				SHA: "abc123",
 				Commit: struct {
 					Message string `json:"message"`
-				}{Message: "feat: add commit policy\n\nBody"},
+				}{Message: "feat: add commit policy\n\nSigned-off-by: Mona Lisa <mona@example.com>"},
 			}})
 		default:
 			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.String())
@@ -125,6 +125,9 @@ func TestRepositoryReadsChangedFilesAndCommits(t *testing.T) {
 	}
 	if repo.Commits[0].Subject != "feat: add commit policy" {
 		t.Fatalf("commit subject = %q", repo.Commits[0].Subject)
+	}
+	if !strings.Contains(repo.Commits[0].Message, "Signed-off-by: Mona Lisa <mona@example.com>") {
+		t.Fatalf("commit message = %q", repo.Commits[0].Message)
 	}
 
 	want := "GET /repos/o/r/pulls/7/files?per_page=100&page=1,GET /repos/o/r/pulls/7/commits?per_page=100&page=1"
