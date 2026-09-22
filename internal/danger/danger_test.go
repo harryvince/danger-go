@@ -97,6 +97,32 @@ func TestEvaluateRequiresConventionalCommits(t *testing.T) {
 	}
 }
 
+func TestEvaluateRequiresSignedOffCommits(t *testing.T) {
+	report := Evaluate(config.Config{
+		Rules: config.Rules{
+			RequireSignedOffCommits: config.BoolRule{Enabled: true},
+		},
+	}, git.Repository{
+		Commits: []git.Commit{
+			{
+				Subject: "feat: add checkout validation",
+				Message: "feat: add checkout validation\n\nSigned-off-by: Mona Lisa <mona@example.com>",
+			},
+			{
+				Subject: "test: cover checkout validation",
+				Message: "test: cover checkout validation",
+			},
+		},
+	})
+
+	if !report.HasFailures() {
+		t.Fatal("expected unsigned commit to fail")
+	}
+	if got, want := len(report.Messages), 1; got != want {
+		t.Fatalf("message count = %d, want %d", got, want)
+	}
+}
+
 func TestEvaluateWarnsWhenSquashRequiredAsWarning(t *testing.T) {
 	report := Evaluate(config.Config{
 		Rules: config.Rules{

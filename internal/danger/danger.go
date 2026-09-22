@@ -27,6 +27,7 @@ var dependencyManifestPatterns = []string{
 }
 
 var conventionalCommitPattern = regexp.MustCompile(`^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: .+`)
+var signedOffByPattern = regexp.MustCompile(`(?im)^Signed-off-by:\s+\S.+\s+<[^<>@\s]+@[^<>@\s]+>$`)
 
 type Level string
 
@@ -101,6 +102,15 @@ func Evaluate(cfg config.Config, repo git.Repository) Report {
 		for _, commit := range repo.Commits {
 			if !conventionalCommitPattern.MatchString(commit.Subject) {
 				report.add(level, fmt.Sprintf("commit subject %q is not conventional", commit.Subject))
+			}
+		}
+	}
+
+	if cfg.Rules.RequireSignedOffCommits.Enabled {
+		level := ruleLevel(cfg, cfg.Rules.RequireSignedOffCommits.Level, LevelFail)
+		for _, commit := range repo.Commits {
+			if !signedOffByPattern.MatchString(commit.Message) {
+				report.add(level, fmt.Sprintf("commit %q is missing a Signed-off-by trailer; create commits with git commit --signoff", commit.Subject))
 			}
 		}
 	}

@@ -111,6 +111,7 @@ rules:
   require_pr_title_pattern: ".+"
   require_linked_issue_pattern: "ISSUE-[0-9]+"
   require_conventional_commits: true
+  require_signed_off_commits: true
   require_squashed_commits:
     enabled: true
     level: warn

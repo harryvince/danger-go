@@ -23,6 +23,7 @@ type Rules struct {
 	RequirePRTitlePattern      StringRule     `yaml:"require_pr_title_pattern"`
 	RequireLinkedIssuePattern  StringRule     `yaml:"require_linked_issue_pattern"`
 	RequireConventionalCommits BoolRule       `yaml:"require_conventional_commits"`
+	RequireSignedOffCommits    BoolRule       `yaml:"require_signed_off_commits"`
 	RequireSquashedCommits     SquashRule     `yaml:"require_squashed_commits"`
 	RequiredLabels             StringListRule `yaml:"required_labels"`
 	RequiredFiles              StringListRule `yaml:"required_files"`
@@ -279,6 +280,7 @@ func (c Config) Validate() error {
 		"rules.require_pr_title_pattern.level":     c.Rules.RequirePRTitlePattern.Level,
 		"rules.require_linked_issue_pattern.level": c.Rules.RequireLinkedIssuePattern.Level,
 		"rules.require_conventional_commits.level": c.Rules.RequireConventionalCommits.Level,
+		"rules.require_signed_off_commits.level":   c.Rules.RequireSignedOffCommits.Level,
 		"rules.require_squashed_commits.level":     c.Rules.RequireSquashedCommits.Level,
 		"rules.required_labels.level":              c.Rules.RequiredLabels.Level,
 		"rules.required_files.level":               c.Rules.RequiredFiles.Level,

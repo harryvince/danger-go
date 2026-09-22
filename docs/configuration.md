@@ -63,6 +63,7 @@ rules:
   require_pr_title_pattern: "^ISSUE-[0-9]+: .+"
   require_linked_issue_pattern: "ISSUE-[0-9]+"
   require_conventional_commits: true
+  require_signed_off_commits: true
   require_squashed_commits:
     enabled: true
     level: warn
@@ -301,6 +302,34 @@ rules:
 ```
 
 In local mode, commit subjects come from the same sources as `require_conventional_commits`. In GitHub Actions, the count comes from the pull request commits API.
+
+### `require_signed_off_commits`
+
+Type: boolean or object
+
+Fails when any pull request commit is missing a `Signed-off-by:` trailer.
+
+```yaml
+rules:
+  require_signed_off_commits: true
+```
+
+With an explicit level:
+
+```yaml
+rules:
+  require_signed_off_commits:
+    enabled: true
+    level: warn
+```
+
+Create signed-off commits with Git's sign-off flag:
+
+```sh
+git commit --signoff
+```
+
+In local mode, commit messages come from `origin/main..HEAD` when available. In GitHub Actions, commit messages come from the pull request commits API.
 
 ### `required_labels`
 

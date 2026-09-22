@@ -61,7 +61,7 @@ func TestLoadExplicitPath(t *testing.T) {
 
 func TestLoadCommitPolicyRules(t *testing.T) {
 	t.Chdir(t.TempDir())
-	writeFile(t, ".danger.yaml", "rules:\n  require_conventional_commits: true\n  require_squashed_commits: warn\n")
+	writeFile(t, ".danger.yaml", "rules:\n  require_conventional_commits: true\n  require_signed_off_commits: true\n  require_squashed_commits: warn\n")
 
 	cfg, _, err := Load("")
 	if err != nil {
@@ -70,6 +70,9 @@ func TestLoadCommitPolicyRules(t *testing.T) {
 
 	if !cfg.Rules.RequireConventionalCommits.Enabled {
 		t.Fatal("require_conventional_commits = false, want true")
+	}
+	if !cfg.Rules.RequireSignedOffCommits.Enabled {
+		t.Fatal("require_signed_off_commits = false, want true")
 	}
 	if !cfg.Rules.RequireSquashedCommits.Enabled {
 		t.Fatal("require_squashed_commits disabled, want enabled")

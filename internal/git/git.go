@@ -19,6 +19,7 @@ type FileChange struct {
 type Commit struct {
 	SHA     string
 	Subject string
+	Message string
 }
 
 type Repository struct {
@@ -161,21 +162,30 @@ func inspectFileChanges(ctx context.Context, dir string, modified, untracked []s
 }
 
 func inspectCommits(ctx context.Context, dir string) []Commit {
-	lines, err := gitLines(ctx, dir, "log", "--format=%H%x00%s", "origin/main..HEAD")
-	if err != nil || len(lines) == 0 {
-		lines, err = gitLines(ctx, dir, "log", "-1", "--format=%H%x00%s")
+	output, err := gitOutput(ctx, dir, "log", "--format=%H%x00%s%x00%B%x1e", "origin/main..HEAD")
+	if err != nil || strings.TrimSpace(output) == "" {
+		output, err = gitOutput(ctx, dir, "log", "-1", "--format=%H%x00%s%x00%B%x1e")
 		if err != nil {
 			return nil
 		}
 	}
 
-	commits := make([]Commit, 0, len(lines))
-	for _, line := range lines {
-		parts := strings.SplitN(line, "\x00", 2)
-		if len(parts) != 2 || parts[1] == "" {
+	records := strings.Split(output, "\x1e")
+	commits := make([]Commit, 0, len(records))
+	for _, record := range records {
+		record = strings.TrimSpace(record)
+		if record == "" {
 			continue
 		}
-		commits = append(commits, Commit{SHA: parts[0], Subject: parts[1]})
+		parts := strings.SplitN(record, "\x00", 3)
+		if len(parts) < 2 || parts[1] == "" {
+			continue
+		}
+		message := parts[1]
+		if len(parts) == 3 && strings.TrimSpace(parts[2]) != "" {
+			message = parts[2]
+		}
+		commits = append(commits, Commit{SHA: parts[0], Subject: parts[1], Message: message})
 	}
 	return commits
 }
@@ -184,7 +194,7 @@ func envCommits(value string) []Commit {
 	lines := splitEnvLines(value)
 	commits := make([]Commit, 0, len(lines))
 	for _, line := range lines {
-		commits = append(commits, Commit{Subject: line})
+		commits = append(commits, Commit{Subject: line, Message: line})
 	}
 	return commits
 }
@@ -229,6 +239,19 @@ func splitEnvLines(value string) []string {
 }
 
 func gitLines(ctx context.Context, dir string, args ...string) ([]string, error) {
+	output, err := gitOutput(ctx, dir, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	text := strings.TrimSpace(output)
+	if text == "" {
+		return nil, nil
+	}
+	return strings.Split(text, "\n"), nil
+}
+
+func gitOutput(ctx context.Context, dir string, args ...string) (string, error) {
 	cmd := exec.CommandContext(ctx, "git", args...)
 	cmd.Dir = dir
 
@@ -236,12 +259,7 @@ func gitLines(ctx context.Context, dir string, args ...string) ([]string, error)
 	cmd.Stderr = &stderr
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-
-	text := strings.TrimSpace(string(output))
-	if text == "" {
-		return nil, nil
-	}
-	return strings.Split(text, "\n"), nil
+	return string(output), nil
 }

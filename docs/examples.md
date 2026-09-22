@@ -125,6 +125,21 @@ rules:
   require_squashed_commits: fail
 ```
 
+## Signed-Off Commits
+
+Require every pull request commit to include a `Signed-off-by:` trailer:
+
+```yaml
+rules:
+  require_signed_off_commits: true
+```
+
+Create signed-off commits with:
+
+```sh
+git commit --signoff
+```
+
 ## Required Labels
 
 Require pull request labels:
@@ -207,6 +222,7 @@ rules:
   require_pr_title_pattern: "^ISSUE-[0-9]+: .+"
   require_linked_issue_pattern: "ISSUE-[0-9]+"
   require_conventional_commits: true
+  require_signed_off_commits: true
   require_squashed_commits:
     enabled: true
     level: warn

@@ -428,11 +428,12 @@ func fileChanges(files []fileResponse) []git.FileChange {
 func gitCommits(commits []commitResponse) []git.Commit {
 	result := make([]git.Commit, 0, len(commits))
 	for _, commit := range commits {
-		subject := strings.SplitN(commit.Commit.Message, "\n", 2)[0]
+		message := strings.TrimSpace(commit.Commit.Message)
+		subject := strings.SplitN(message, "\n", 2)[0]
 		if subject == "" {
 			continue
 		}
-		result = append(result, git.Commit{SHA: commit.SHA, Subject: subject})
+		result = append(result, git.Commit{SHA: commit.SHA, Subject: subject, Message: message})
 	}
 	return result
 }
